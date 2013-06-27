@@ -4,14 +4,14 @@
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
 					   showStatusBar="false"
 					   xmlns:provider="com.pblabs.engine.resource.provider.*"
-					   width="700"
-					   height="600"
-					   minWidth="700"
-					   minHeight="600"
+					   width="720"
+					   height="500"
+					   minWidth="720"
+					   minHeight="500"
 					   currentState="Initial"
-					   backgroundColor="#666666"
 					   frameRate="60"
 					   title="SpriteSheet Preview"
+					   backgroundColor.Initial="#666666"
 					   backgroundColor.About="#5A5E67"
 					   enterFrame.Initial="enterFrame(event)"
 					   invoke="onInvoke(event)"
@@ -262,7 +262,7 @@
 					   left="160"
 					   styleName="Tools"
 					   enabled="{_hasContent}"
-					   id="topBar">
+					   id="topBar" top.Initial="10" left.Initial="160" right.Initial="87">
 
 		<s:CheckBox label="Loop"
 					id="loop"
@@ -345,16 +345,6 @@
 					 id="zoomLabel"
 					 change.Initial="zoomLabel_changeHandler(event)" />
 	</s:BorderContainer>
-	<s:Button label="About"
-			  id="aboutButton"
-			  width="55"
-			  fontSize="10"
-			  height="18"
-			  click.Initial="currentState = 'About'"
-			  x.About="168"
-			  left.Initial="168"
-			  bottom.Initial="15"
-			  bottom.About="15" />
 	<s:BorderContainer includeIn="About"
 					   right="0"
 					   left="0"
@@ -403,5 +393,15 @@
 					 horizontalCenter="-7"
 					 color="#F3F3F3" />
 		</s:BorderContainer>
+	</s:BorderContainer>
+	<s:BorderContainer includeIn="Initial" y="10" height="31" styleName="Tools" right="10" width="69">
+		<s:Button label="About"
+				  id="aboutButton"
+				  width="55"
+				  fontSize="10"
+				  height="18"
+				  click.Initial="currentState = 'About'"
+				  x.About="168"
+				  bottom.About="15"  x="6" y="6"/>
 	</s:BorderContainer>
 </s:WindowedApplication>

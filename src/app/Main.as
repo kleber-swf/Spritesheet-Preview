@@ -142,7 +142,7 @@ package app {
 			var format:TextFormat = new TextFormat("Arial", 30, 0xFFFFFF, true);
 			format.align = TextAlign.CENTER;
 			field.defaultTextFormat = format;
-			field.text = "Drag a spritesheet here";
+			field.text = "Drop a spritesheet here";
 			return field;
 		}
 		
