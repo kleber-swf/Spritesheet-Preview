@@ -1,0 +1,27 @@
+<things>
+	<entity name="Main">
+		<component type="com.pblabs.rendering2D.spritesheet.SpriteSheetComponent" name="SpriteSheet">
+			<cached>false</cached>
+		</component>
+
+		<component type="com.pblabs.rendering2D.SpriteSheetRenderer" name="Renderer">
+			<spriteSheet componentName="SpriteSheet" />
+			<layerIndex>10</layerIndex>
+		</component>
+
+		<component type="com.pblabs.animation.AnimatorComponent" name="Animator">
+			<autoPlay>false</autoPlay>
+			<reference>@Renderer.spriteIndex</reference>
+		</component>
+
+		<component type="app.SpriteSheetController" name="Controller">
+			<background componentName="Background" />
+			<spriteSheet componentName="SpriteSheet" />
+			<animator componentName="Animator" />
+		</component>
+	</entity>
+
+	<group name="AllThings">
+		<objectReference name="Main" />
+	</group>
+</things>
