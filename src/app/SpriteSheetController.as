@@ -23,6 +23,11 @@ package app {
 		private var _url:String;
 		private var _dirty:Boolean;
 		private var _loop:Boolean = true;
+		private var _currentAnimator:Animator;
+		
+		public function get currentAnimator():Animator {
+			return _currentAnimator;
+		}
 		
 		public function set rows(value:int):void {
 			_rows = value > 0 ? value : 1;
@@ -49,7 +54,7 @@ package app {
 			_dirty = true;
 		}
 		
-		public function get isPlaying():Boolean { return animator.currentAnimator != null && animator.currentAnimator.isAnimating; }
+		public function get isPlaying():Boolean { return _currentAnimator != null && _currentAnimator.isAnimating; }
 		
 		public override function onTick(deltaTime:Number):void {
 			if (!_dirty)
@@ -77,6 +82,7 @@ package app {
 			
 			var animations:Dictionary = new Dictionary();
 			animations["play"] = a;
+			_currentAnimator = a;
 			
 			animator.animations = animations;
 		}

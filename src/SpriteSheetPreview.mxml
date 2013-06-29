@@ -90,8 +90,8 @@
 			private function enterFrame(event:Event):void {
 				if (_main == null || _main.controller == null)
 					return;
-				if (!(_main.controller.animator == null || _main.controller.animator.currentAnimator == null))
-					stateSlider.value = _main.controller.animator.currentAnimator.currentValue;
+				if (_main.controller.currentAnimator != null)
+					stateSlider.value = _main.controller.currentAnimator.currentValue;
 				
 				if (!_dirty)
 					return;
