@@ -2,24 +2,19 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
 					   xmlns:s="library://ns.adobe.com/flex/spark"
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
-					   showStatusBar="false"
 					   xmlns:provider="com.pblabs.engine.resource.provider.*"
-					   width="720"
-					   height="500"
-					   minWidth="720"
-					   minHeight="500"
-					   currentState="Initial"
-					   frameRate="60"
+					   width="720" height="500" minWidth="720" minHeight="500"
+					   applicationComplete="application_applicationComplete(event)"
+					   backgroundColor="#5A5E67"
+					   creationComplete="application_creationComplete(event)" currentState="Initial"
+					   enterFrame="windowedapplication1_enterFrameHandler(event)" frameRate="60"
+					   invoke="application_invoke(event)" showStatusBar="false"
 					   title="SpriteSheet Preview"
-					   backgroundColor.Initial="#666666"
-					   backgroundColor.About="#5A5E67"
-					   enterFrame.Initial="enterFrame(event)"
-					   invoke="onInvoke(event)"
-					   applicationComplete="onLoaded()"
-					   creationComplete="checkForUpdate()">
+					   nativeDragDrop.Initial="application_nativeDragDrop(event)"
+					   nativeDragEnter.Initial="application_nativeDragEnter(event)">
 	<s:states>
-		<s:State name="Initial" />
-		<s:State name="About" />
+		<s:State name="Initial"/>
+		<s:State name="About"/>
 	</s:states>
 
 	<fx:Declarations>
@@ -41,138 +36,58 @@
 
 	<fx:Script>
 		<![CDATA[
-			import air.update.ApplicationUpdaterUI;
-			import air.update.events.UpdateEvent;
+			import app.AnimationModel;
+			import app.ResourceController;
+			import app.SpriteSheet;
+			import app.UpdateController;
 			
-			import app.Main;
-			
-			import com.pblabs.engine.PBE;
+			import flash.utils.getTimer;
 			
 			import mx.controls.Alert;
 			import mx.core.IUIComponent;
-			import mx.events.ColorPickerEvent;
+			import mx.events.FlexEvent;
 			import mx.managers.DragManager;
 			
 			import spark.events.TextOperationEvent;
 			
-			private var _main:Main;
+			[Bindable] private var _model:AnimationModel;
+			[Bindable] private var _updater:UpdateController;
 			
-			[Bindable]
-			private var _hasContent:Boolean;
+			private var _resources:ResourceController;
 			
-			private var _rows:int = 1;
-			private var _cols:int = 1;
-			private var _fps:int = 20;
-			private var _url:String;
-			private var _dirty:Boolean;
+			private var _spriteSheet:SpriteSheet;
+			private var _data:BitmapData;
 			
-			private function set imageURL(value:String):void {
-				if (!isValidFileURL(value))
-					return;
+			/* ===== [INITIALIZATION] ===== */
+			
+			private function application_creationComplete(event:FlexEvent):void {
+				// Check for updates
+				_updater = new UpdateController("http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/update.xml");
+				_updater.checkForUpdate(function(event:ErrorEvent):void {Alert.show(event.toString());});
+			}
+			
+			private function application_applicationComplete(event:FlexEvent):void {
+				// Create instances
+				_model = new AnimationModel();
+				_resources = new ResourceController(_model);
 				
-				_url = value;
-				_dirty = true;
-				_main.hasContent = true;
-				_hasContent = true;
+				_spriteSheet = new SpriteSheet(_model);
+				_data = new BitmapData(stageContainer.width, stageContainer.height, true, 0x000000);
+				var b:Bitmap = new Bitmap(_data, "auto", true);
+				stageContainer.addChild(b);
 			}
 			
-			private function onLoaded():void {
-				_main = new Main();
-				stageContainer.addChild(_main);
-			}
-			
-			private function onInvoke(event:InvokeEvent):void {
+			private function application_invoke(event:InvokeEvent):void {
+				// Check initial parameters
 				if (event.arguments == null || event.arguments.length <= 0)
 					return;
-				imageURL = event.arguments[0];
+				_resources.imageURL = event.arguments[0];
 			}
 			
-			private function enterFrame(event:Event):void {
-				if (_main == null || _main.controller == null)
-					return;
-				if (_main.controller.currentAnimator != null)
-					stateSlider.value = _main.controller.currentAnimator.currentValue;
-				
-				if (!_dirty)
-					return;
-				
-				_main.controller.url = _url;
-				_main.controller.rows = _rows;
-				_main.controller.cols = _cols;
-				_main.controller.fps = _fps;
-				stateSlider.maximum = _rows * _cols;
-				_dirty = false;
-			}
 			
-			private function valueChanged(event:TextOperationEvent):int {
-				var input:TextInput = event.target as TextInput;
-				var n:int;
-				try {
-					n = parseInt(input.text);
-				} catch (e:Error) {
-					n = 1;
-				}
-				input.text = n.toString();
-				return n;
-			}
+			/* ===== [DRAG AND DROP] ===== */
 			
-			private function rows_valueChanged(event:TextOperationEvent):void {
-				_rows = valueChanged(event);
-				_dirty = true;
-			}
-			
-			private function cols_valueChanged(event:TextOperationEvent):void {
-				_cols = valueChanged(event);
-				_dirty = true;
-			}
-			
-			private function fps_changeHandler(event:TextOperationEvent):void {
-				_fps = valueChanged(event);
-				_dirty = true;
-			}
-			
-			private function togglePlay(event:MouseEvent):void {
-				var button:ToggleButton = event.target as ToggleButton;
-				if (button.selected) {
-					_main.controller.play();
-					button.label = "Stop";
-				} else {
-					_main.controller.stop();
-					button.label = "Play";
-				}
-			}
-			
-			private function loop_clickHandler(event:MouseEvent):void {
-				_main.controller.loop = loop.selected;
-			}
-			
-			private function backgroundColor_changeHandler(event:ColorPickerEvent):void {
-				_main.backgroundColor = event.color;
-			}
-			
-			private function backgroundAlpha_changeHandler(event:Event):void {
-				_main.backgroundAlpha = backgroundAlpha.value;
-			}
-			
-			private function zoom_changeHandler(event:Event):void {
-				PBE.scene.zoom = zoomSlider.value;
-			}
-			
-			private function stateSlider_changeHandler(event:Event):void {
-				if (_main.controller.isPlaying) {
-					_main.controller.stop();
-					playButton.label = "Play";
-					playButton.selected = false;
-				}
-				_main.controller.gotoFrame(stateSlider.value);
-			}
-			
-			private function stageContainer_nativeDragDropHandler(event:NativeDragEvent):void {
-				var arr:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
-				imageURL = (arr[0] as File).url;
-			}
-			
-			private function stageContainer_nativeDragEnterHandler(event:NativeDragEvent):void {
+			private function application_nativeDragEnter(event:NativeDragEvent):void {
 				if (!event.clipboard.hasFormat(ClipboardFormats.FILE_LIST_FORMAT))
 					return;
 				var files:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
@@ -184,224 +99,148 @@
 					DragManager.acceptDragDrop(this);
 			}
 			
-			private function zoomLabel_changeHandler(event:TextOperationEvent):void {
-				var value:int = valueChanged(event);
-				zoomSlider.value = value * 0.01;
-				PBE.scene.zoom = zoomSlider.value;
+			private function application_nativeDragDrop(event:NativeDragEvent):void {
+				var arr:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+				_resources.imageURL = (arr[0] as File).url;
 			}
 			
-			private function isValidFileURL(url:String):Boolean {
-				var file:File;
+			private var lastTime:int = 0;
+			
+			/* ===== [DEBUG] ===== */
+			protected function windowedapplication1_enterFrameHandler(event:Event):void
+			{
+				//trace(_animationModel);
+				if (_data == null)
+					return;
+				
+				var time:int = getTimer();
+				var delta:int = time - lastTime;
+				lastTime = time;
+				
+				_data.lock();
+				_data.fillRect(new Rectangle(0, 0, _data.width, _data.height), 0x000000);
+				_spriteSheet.draw(_data, delta);
+				_data.unlock();
+			}
+			
+			/* ===== [ANIMATION DATA CHANGING] ===== */
+			
+			private function rowsInput_change(event:TextOperationEvent):void {
+				_model.rows = valueChanged(event, 0);
+			}
+			
+			private function colsInput_change(event:TextOperationEvent):void {
+				_model.cols = valueChanged(event, 0);
+			}
+			
+			private function fpsInput_change(event:TextOperationEvent):void {
+				_model.fps = valueChanged(event, 1);
+			}
+			
+			private function loopCheckbox_changed(event:Event):void {
+				_model.loop = (event.target as CheckBox).selected;
+			}
+			
+			private function playButton_change(event:Event):void {
+				_model.playing = (event.target as ToggleButton).selected;
+			}
+			
+			protected function frameSlider_change(event:Event):void {
+				_model.playing = false;
+				_model.currentFrame = (event.target as HSlider).value;
+			}
+			
+			
+			/* ===== [OPERATIONS] ===== */
+			
+			private function valueChanged(event:TextOperationEvent, defaultValue:int):int {
+				var input:TextInput = event.target as TextInput;
+				var n:int;
 				try {
-					file = new File(url);
-				} catch (e:ArgumentError) {
-					return false;
+					n = parseInt(input.text);
+				} catch (e:Error) {
+					n = defaultValue;
 				}
-				var extension:String = file.extension;
-				return file.exists && (extension == "png" || extension == "jpg" || extension == "gif");
+				input.text = n.toString();
+				return n;
 			}
 			
-			
-			/* ====== UPDATER ======== */
-			
-			[Bindable]
-			private var _version:String;
-			private var _appUpdater:ApplicationUpdaterUI = new ApplicationUpdaterUI();
-			
-			private function checkForUpdate():void {
-				setApplicationVersion();
-				_appUpdater.updateURL = "http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/update.xml";
-				_appUpdater.isCheckForUpdateVisible = false;
-				_appUpdater.addEventListener(UpdateEvent.INITIALIZED, function(e:UpdateEvent):void {_appUpdater.checkNow();});
-				_appUpdater.addEventListener(ErrorEvent.ERROR, function(event:ErrorEvent):void {Alert.show(event.toString());});
-				_appUpdater.initialize();
-			}
-			
-			private function setApplicationVersion():void {
-				var appXML:XML = NativeApplication.nativeApplication.applicationDescriptor;
-				var ns:Namespace = appXML.namespace();
-				_version = "version: " + appXML.ns::versionNumber;
-			}
 		]]>
 	</fx:Script>
-	<s:Panel left="10"
-			 top="10"
-			 bottom="10"
-			 width="143"
-			 id="toolsPanel"
-			 title="Info"
-			 backgroundColor="#444444"
-			 enabled="{_hasContent}">
-		<s:Form left="0"
-				top="0"
-				right="0"
-				height="112">
-			<s:layout>
-				<s:FormLayout />
-			</s:layout>
-			<s:FormItem label="Rows" width="100%">
-				<s:TextInput id="rows"
-							 width="40"
-							 x="0"
-							 text="1"
-							 change.Initial="rows_valueChanged(event)" />
-			</s:FormItem>
-			<s:FormItem label="Cols" width="100%">
-				<s:TextInput id="cols"
-							 width="40"
-							 x="0"
-							 text="1"
-							 change.Initial="cols_valueChanged(event)" />
-			</s:FormItem>
-		</s:Form>
+	<s:BorderContainer id="topBar" left="160" right="87" top="10" height="32" styleName="Tools">
 
-	</s:Panel>
-	<s:BorderContainer height="32"
-					   right="10"
-					   top="10"
-					   left="160"
-					   styleName="Tools"
-					   enabled="{_hasContent}"
-					   id="topBar" top.Initial="10" left.Initial="160" right.Initial="87">
-
-		<s:CheckBox label="Loop"
-					id="loop"
-					click.Initial="loop_clickHandler(event)"
-					selected="true"
-					x="72"
-					y="5" />
-		<s:TextInput width="31"
-					 id="fps"
-					 text="20"
-					 change.Initial="fps_changeHandler(event)"
-					 x="10"
-					 y="4"
-					 textAlign="right"
-					 height="20" />
-		<s:Label text="fps" x="44" y="10" />
-		<s:ToggleButton label="Play"
-						click.Initial="togglePlay(event)"
-						y="4"
-						x="153"
-						width="56"
-						id="playButton" />
-		<mx:ColorPicker y="3"
-						selectedColor="#666666"
-						id="backgroundColor"
+		<s:CheckBox id="loopCheckbox" x="72" y="5" label="Loop" change="loopCheckbox_changed(event)"
+					selected="{_model.loop}"/>
+		<s:TextInput id="fpsInput" x="10" y="4" width="31" height="20"
+					 change="fpsInput_change(event)" text="{_model.fps}" textAlign="right"/>
+		<s:Label x="44" y="10" text="fps"/>
+		<s:ToggleButton id="playButton" x="153" y="4" width="56" label="{_model.playing ? 'Pause' : 'Play'}"
+						change="playButton_change(event)" selected="{_model.playing}"/>
+		<s:HSlider id="frameSlider" y="9" left="217" right="10" liveDragging="true"
+				   maximum="{_model.totalFrames}" minimum="0" stepSize="1"
+				   value="{_model.currentFrame}"
+				   change.Initial="frameSlider_change(event)"/>
+	</s:BorderContainer>
+	<s:BorderContainer left="160" right="10" top="50" bottom="50" borderVisible="false"
+					   dropShadowVisible="false">
+		<s:BitmapImage id="transparentBackground" left="0" right="0" top="0" bottom="0"
+					   fillMode="repeat"
+					   source.Initial="@Embed('assets/images/transparency.png')"/>
+		<s:BorderContainer id="background" left="0" right="0" top="0" bottom="0"
+						   borderVisible="false" dropShadowVisible="false"
+						   backgroundAlpha="{backgroundAlphaSlider.value}"
+						   backgroundColor="{backgroundColorPicker.selectedColor}"/>
+		<mx:UIComponent id="stageContainer" left="0" right="0" top="0" bottom="0"/>
+	</s:BorderContainer>
+	
+	<s:BorderContainer id="bottomBar" left="160" right="10" bottom="10" height="32" styleName="Tools">
+		<s:HSlider id="zoomSlider" y="10" right="59" maximum="3" minimum="0.01" showDataTip="false"
+				   stepSize="0.01" value="1"/>
+		<s:TextInput id="zoomLabel" y="4" right="9" width="42"
+					 text="{(zoomSlider.value*100).toFixed(0)}%" textAlign="right"/>
+		<s:Label x="10" y="10" text="Background"/>
+		<mx:ColorPicker id="backgroundColorPicker" x="82" y="4" selectedColor="#666666"
 						showTextField="true"
-						change.Initial="backgroundColor_changeHandler(event)"
-						right="81" />
-		<s:Label y="9" text="Background" right="109" />
-		<s:HSlider y="9"
-				   id="stateSlider"
-				   stepSize="1"
-				   liveDragging="true"
-				   left="217"
-				   maximum="1"
-				   value="1"
-				   right="200"
-				   showDataTip="false"
-				   change.Initial="stateSlider_changeHandler(event)"
-				   minimum="1" />
-		<s:HSlider y="9"
-				   id="backgroundAlpha"
-				   right="13"
-				   width="60"
-				   maximum="1"
-				   stepSize="0.01"
-				   value="1"
-				   change.Initial="backgroundAlpha_changeHandler(event)"
-				   showDataTip="false" />
+						selectedColor.Initial="#5A5E67"/>
+		<s:HSlider id="backgroundAlphaSlider" x="112" y="10" width="60" maximum="1" minimum="0"
+				   showDataTip="false" stepSize="0.01" value="1"/>
 	</s:BorderContainer>
-	<mx:UIComponent left="160"
-					right="10"
-					bottom="46"
-					top="48"
-					id="stageContainer"
-					nativeDragDrop.Initial="stageContainer_nativeDragDropHandler(event)"
-					nativeDragEnter.Initial="stageContainer_nativeDragEnterHandler(event)">
-	</mx:UIComponent>
-	<s:BorderContainer height="28"
-					   right="10"
-					   left="160"
-					   bottom="10"
-					   styleName="Tools"
-					   id="bottomBar"
-					   enabled="{_hasContent}">
-		<s:HSlider y="8"
-				   stepSize="0.01"
-				   right="59"
-				   maximum="3"
-				   minimum="0.01"
-				   value="1"
-				   id="zoomSlider"
-				   showDataTip="false"
-				   change.Initial="zoom_changeHandler(event)" />
-		<s:TextInput y="2"
-					 text="{(zoomSlider.value*100).toFixed(0)}%"
-					 textAlign="right"
-					 width="42"
-					 right="9"
-					 id="zoomLabel"
-					 change.Initial="zoomLabel_changeHandler(event)" />
+	<s:BorderContainer y="10" right="10" width="69" height="31" styleName="Tools">
+		<s:Button id="aboutButton" x="6" y="6" width="55" height="18" label="About" fontSize="10"
+				  click.Initial="currentState = 'About'"/>
 	</s:BorderContainer>
-	<s:BorderContainer includeIn="About"
-					   right="0"
-					   left="0"
-					   top="0"
-					   bottom="0"
-					   backgroundAlpha="0.81"
-					   click.About="currentState = 'Initial'"
-					   backgroundColor="#434343">
-		<s:BorderContainer width="344"
-						   height="193"
-						   horizontalCenter="-4"
-						   verticalCenter="0"
-						   backgroundColor="#666666"
-						   styleName="Tools">
-			<s:Label y="15"
-					 text="SpriteSheet Preview"
-					 fontWeight="bold"
-					 fontSize="20"
-					 color="#F3F3F3"
-					 fontFamily="Arial"
-					 fontStyle="italic"
-					 horizontalCenter="7" />
-			<mx:HRule height="4"
-					  y="39"
-					  width="264"
-					  horizontalCenter="18" />
-			<s:Label y="55"
+	<s:BorderContainer left="10" top="10" bottom="10" width="142" styleName="Tools">
+		<s:Panel left="0" right="0" top="0" height="117" backgroundColor="#444444"
+				 dropShadowVisible="false" styleName="Tools" title="Info">
+			<s:Label x="9" y="19" text="Rows"/>
+			<s:Label x="9" y="49" text="Cols"/>
+			<s:TextInput id="rowsInput" y="13" right="10" width="41" text="{_model.rows}"
+						 textAlign="right"
+						 change.Initial="rowsInput_change(event)"/>
+			<s:TextInput id="colsInput" y="43" right="10" width="41" text="{_model.cols}"
+						 textAlign="right"
+						 change.Initial="colsInput_change(event)"/>
+		</s:Panel>
+	</s:BorderContainer>
+	
+	<s:BorderContainer includeIn="About" left="0" right="0" top="0" bottom="0" backgroundAlpha="0.81"
+					   backgroundColor="#434343"
+					   click.About="currentState = 'Initial'">
+		<s:BorderContainer width="344" height="193" backgroundColor="#666666" horizontalCenter="-4"
+						   styleName="Tools" verticalCenter="0">
+			<s:Label y="15" color="#F3F3F3" fontFamily="Arial" fontSize="20" fontStyle="italic"
+					 fontWeight="bold" horizontalCenter="7" text="SpriteSheet Preview"/>
+			<mx:HRule y="39" width="264" height="4" horizontalCenter="18"/>
+			<s:Label y="55" width="300" color="#F3F3F3" horizontalCenter="0"
 					 text="A simple program to preview sprite sheets.&#xd;Just drag your spritesheet into the indicated area and set rows and cols. Hit play e see the preview."
-					 horizontalCenter="0"
-					 color="#F3F3F3"
-					 width="300"
-					 textAlign="center" />
-			<s:Label text="Kleber Lopes da Silva"
-					 horizontalCenter="0"
-					 color="#F3F3F3"
-					 bottom="33" />
-			<mx:LinkButton label="http://kleber-swf.blogspot.com"
+					 textAlign="center"/>
+			<s:Label bottom="33" color="#F3F3F3" horizontalCenter="0" text="Kleber Lopes da Silva"/>
+			<mx:LinkButton bottom="12" label="http://kleber-swf.blogspot.com"
 						   click="navigateToURL(new URLRequest('http://kleber-swf.blogspot.com'))"
-						   horizontalCenter="0"
-						   color="#9AAEC4"
-						   bottom="12" />
-			<s:Image x="11" y="12" source="assets/icons/icon-36.png" />
-			<s:Label y="105"
-					 text="{_version}"
-					 id="versionLabel"
-					 horizontalCenter="-7"
-					 color="#F3F3F3" />
+						   color="#9AAEC4" horizontalCenter="0"/>
+			<s:Image x="11" y="12" source="assets/icons/icon-36.png"/>
+			<s:Label id="versionLabel" y="109" width="165" color="#F3F3F3" horizontalCenter="0"
+					 text="Version {_updater.version}" textAlign="center"/>
 		</s:BorderContainer>
-	</s:BorderContainer>
-	<s:BorderContainer includeIn="Initial" y="10" height="31" styleName="Tools" right="10" width="69">
-		<s:Button label="About"
-				  id="aboutButton"
-				  width="55"
-				  fontSize="10"
-				  height="18"
-				  click.Initial="currentState = 'About'"
-				  x.About="168"
-				  bottom.About="15"  x="6" y="6"/>
-	</s:BorderContainer>
+	</s:BorderContainer>	
 </s:WindowedApplication>
