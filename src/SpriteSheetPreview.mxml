@@ -7,7 +7,7 @@
 					   applicationComplete="application_applicationComplete(event)"
 					   backgroundColor="#5A5E67"
 					   creationComplete="application_creationComplete(event)" currentState="Initial"
-					   enterFrame="application_enterFrameHandler(event)" frameRate="60"
+					   enterFrame="application_enterFrame(event)" frameRate="60"
 					   invoke="application_invoke(event)" showStatusBar="false"
 					   title="SpriteSheet Preview"
 					   nativeDragDrop.Initial="application_nativeDragDrop(event)"
@@ -60,11 +60,13 @@
 			private var _bitmapData:BitmapData;
 			private var _drawBitmap:Bitmap;
 			private var _buffer:BitmapData;
-			private var _matrix:Matrix;
+			private var _matrix:Matrix = new Matrix();
 
 			[Bindable] private var _scale:Number = 1;
+			[Bindable] private var _hasContent:Boolean;
 			
 			private var _lastTime:int = 0;
+			
 			
 			/* ===== [INITIALIZATION] ===== */
 			
@@ -77,9 +79,10 @@
 			private function application_applicationComplete(event:FlexEvent):void {
 				// Create instances
 				_model = new AnimationModel();
-				_resources = new ResourceController(_model);
+				_resources = new ResourceController();
+				_resources.onImageLoadSuccess = onImageLoadSuccess;
+				_resources.onImageLoadError = onImageLoadError;
 				
-				_matrix = new Matrix();
 				_spriteSheet = new SpriteSheet(_model);
 				createDrawBitmap();
 				stageContainer.addChild(_drawBitmap);
@@ -95,22 +98,24 @@
 			
 			/* ===== [EVENTS] ===== */
 			
-			private function stageContainer_resizeHandler(event:ResizeEvent):void {
+			private function stageContainer_resize(event:ResizeEvent):void {
 				if (stageContainer == null || stageContainer.width == 0 || stageContainer.height == 0)
 					return;
 				var newWidth:int = stageContainer.width;
 				var newHeight:int = stageContainer.height;
 				createDrawBitmap();
+				scale = _scale;
 			}
 			
-			private function zoomSlider_change(event:Event):void
-			{
-				_scale = (event.target as HSlider).value;
-				_matrix.identity();
-				_matrix.scale(_scale, _scale);
+			private function zoomSlider_change(event:Event):void {
+				scale = (event.target as HSlider).value;
 			}
 			
-			private function application_enterFrameHandler(event:Event):void {
+			protected function zoomLabel_change(event:TextOperationEvent):void {
+				scale = valueChanged(event, 100) * 0.01;
+			}
+			
+			private function application_enterFrame(event:Event):void {
 				if (_bitmapData == null || _spriteSheet == null)
 					return;
 				
@@ -120,14 +125,13 @@
 				
 				_buffer.lock();
 				_buffer.fillRect(_buffer.rect, 0x000000);
-				_spriteSheet.draw(_buffer, delta, stageContainer.width/_scale, stageContainer.height/_scale);
+				_spriteSheet.draw(_buffer, delta, _buffer.rect);
 				_buffer.unlock();
 				
 				_bitmapData.lock();
 				_bitmapData.fillRect(_bitmapData.rect, 0x000000);
 				_bitmapData.draw(_buffer, _matrix);
 				_bitmapData.unlock();
-				
 			}
 			
 			
@@ -181,6 +185,17 @@
 			
 			/* ===== [OPERATIONS] ===== */
 			
+			private function set scale(value:Number):void {
+				_scale = value;
+				_matrix.identity();
+				_matrix.scale(_scale, _scale);
+				_buffer = new BitmapData(stageContainer.width/_scale, stageContainer.height/_scale, true, 0x000000);
+//				_matrix.translate(
+//					(stageContainer.width - (stageContainer.width * _scale)) * 0.5,
+//					(stageContainer.height - (stageContainer.height * _scale)) * 0.5
+//				);
+			}
+			
 			private function valueChanged(event:TextOperationEvent, defaultValue:int):int {
 				var input:TextInput = event.target as TextInput;
 				var n:int;
@@ -206,9 +221,18 @@
 				_bitmapData = data;
 			}
 			
+			private function onImageLoadError(errString:String):void {
+				Alert.show(errString, "Error");
+			}
+			
+			private function onImageLoadSuccess(image:Bitmap):void {
+				_spriteSheet.image = image;
+				_hasContent = true;
+			}
+			
 		]]>
 	</fx:Script>
-	<s:BorderContainer id="topBar" left="160" right="87" top="10" height="32" styleName="Tools">
+	<s:BorderContainer id="topBar" left="160" right="87" top="10" height="32" styleName="Tools" enabled="{_hasContent}">
 
 		<s:CheckBox id="loopCheckbox" x="72" y="5" label="Loop" change="loopCheckbox_changed(event)"
 					selected="{_model.loop}"/>
@@ -218,34 +242,31 @@
 		<s:ToggleButton id="playButton" x="153" y="4" width="56"
 						label="{_model.playing ? 'Pause' : 'Play'}"
 						change="playButton_change(event)" selected="{_model.playing}"/>
-		<s:HSlider id="frameSlider" y="9" left="217" right="10" liveDragging="true"
-				   maximum="{_model.totalFrames}" minimum="0" stepSize="1"
-				   value="{_model.currentFrame}"
-				   change.Initial="frameSlider_change(event)"/>
+		<s:HSlider id="frameSlider" y="9" left="217" right="10" change="frameSlider_change(event)"
+				   liveDragging="true" maximum="{_model.totalFrames}" minimum="0" stepSize="1"
+				   value="{_model.currentFrame}"/>
 	</s:BorderContainer>
 	<s:BorderContainer left="160" right="10" top="50" bottom="50" borderVisible="false"
 					   dropShadowVisible="false">
 		<s:BitmapImage id="transparentBackground" left="0" right="0" top="0" bottom="0"
-					   fillMode="repeat"
-					   source.Initial="@Embed('assets/images/transparency.png')"/>
+					   fillMode="repeat" source="@Embed('assets/images/transparency.png')"/>
 		<s:BorderContainer id="background" left="0" right="0" top="0" bottom="0"
 						   backgroundAlpha="{backgroundAlphaSlider.value}"
 						   backgroundColor="{backgroundColorPicker.selectedColor}"
 						   borderVisible="false" dropShadowVisible="false"/>
-		<mx:UIComponent id="stageContainer" left="0" right="0" top="0" bottom="0" 
-						resize="stageContainer_resizeHandler(event)"/>
+		<mx:UIComponent id="stageContainer" left="0" right="0" top="0" bottom="0"
+						resize="stageContainer_resize(event)"/>
 	</s:BorderContainer>
 	
-	<s:BorderContainer id="bottomBar" left="160" right="10" bottom="10" height="32" styleName="Tools">
-		<s:HSlider id="zoomSlider" y="10" right="59" maximum="3" minimum="0.01" showDataTip="false"
-				   stepSize="0.01" value="1"
-				   change.Initial="zoomSlider_change(event)" value.Initial="{_scale}"/>
-		<s:TextInput id="zoomLabel" y="4" right="9" width="42"
+	<s:BorderContainer id="bottomBar" left="160" right="10" bottom="10" height="32" styleName="Tools" enabled="{_hasContent}">
+		<s:HSlider id="zoomSlider" y="10" right="59" change="zoomSlider_change(event)" maximum="3"
+				   minimum="0.01" showDataTip="false" stepSize="0.01" value="{_scale}"
+				   minimum.Initial="0.1"/>
+		<s:TextInput id="zoomLabel" y="4" right="9" width="42" change="zoomLabel_change(event)"
 					 text="{(zoomSlider.value*100).toFixed(0)}%" textAlign="right"/>
 		<s:Label x="10" y="10" text="Background"/>
-		<mx:ColorPicker id="backgroundColorPicker" x="82" y="4" selectedColor="#666666"
-						showTextField="true"
-						selectedColor.Initial="#5A5E67"/>
+		<mx:ColorPicker id="backgroundColorPicker" x="82" y="4" selectedColor="#5A5E67"
+						showTextField="true"/>
 		<s:HSlider id="backgroundAlphaSlider" x="112" y="10" width="60" maximum="1" minimum="0"
 				   showDataTip="false" stepSize="0.01" value="1"/>
 	</s:BorderContainer>
@@ -253,17 +274,15 @@
 		<s:Button id="aboutButton" x="6" y="6" width="55" height="18" label="About" fontSize="10"
 				  click.Initial="currentState = 'About'"/>
 	</s:BorderContainer>
-	<s:BorderContainer left="10" top="10" bottom="10" width="142" styleName="Tools">
+	<s:BorderContainer left="10" top="10" bottom="10" width="142" styleName="Tools" enabled="{_hasContent}">
 		<s:Panel left="0" right="0" top="0" height="117" backgroundColor="#444444"
 				 dropShadowVisible="false" styleName="Tools" title="Info">
 			<s:Label x="9" y="19" text="Rows"/>
 			<s:Label x="9" y="49" text="Cols"/>
-			<s:TextInput id="rowsInput" y="13" right="10" width="41" text="{_model.rows}"
-						 textAlign="right"
-						 change.Initial="rowsInput_change(event)"/>
-			<s:TextInput id="colsInput" y="43" right="10" width="41" text="{_model.cols}"
-						 textAlign="right"
-						 change.Initial="colsInput_change(event)"/>
+			<s:TextInput id="rowsInput" y="13" right="10" width="41" change="rowsInput_change(event)"
+						 text="{_model.rows}" textAlign="right"/>
+			<s:TextInput id="colsInput" y="43" right="10" width="41" change="colsInput_change(event)"
+						 text="{_model.cols}" textAlign="right"/>
 		</s:Panel>
 	</s:BorderContainer>
 	

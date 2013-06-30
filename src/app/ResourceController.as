@@ -1,22 +1,52 @@
 package app
 {
+	import flash.display.Bitmap;
+	import flash.display.Loader;
+	import flash.events.Event;
+	import flash.events.IOErrorEvent;
 	import flash.filesystem.File;
+	import flash.net.URLRequest;
 
 	//TODO maybe remove this class and put the behaviour inside the model
 	public final class ResourceController
 	{
-		private var _model:AnimationModel;
+		private var _image:Bitmap;
+		private var _loading:Boolean;
+		public var onImageLoadSuccess:Function;
+		public var onImageLoadError:Function;
 		
-		public function ResourceController(animationModel:AnimationModel) {
-			_model = animationModel;
+		public function get image():Bitmap {
+			return _image;
+		}
+		
+		public function get loading():Boolean {
+			return _loading;
 		}
 		
 		public function set imageURL(value:String):void {
-			if (!isValidFileURL(value))
+			if (!isValidFileURL(value)) {
+				if (onImageLoadError != null)
+					onImageLoadError("Invalid image file");
 				return;
+			}
 			
-			_model.url = value;
-			trace(value);
+			var loader:Loader = new Loader();
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoadComplete);
+			loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, onLoadError);
+			loader.load(new URLRequest(value));
+			_loading = true;
+		}
+		
+		private function onLoadError(event:IOErrorEvent):void {
+			if (onImageLoadError != null)
+				onImageLoadError("I/O Error");
+		}
+		
+		private function onLoadComplete(event:Event):void {
+			_image = event.target.content as Bitmap;
+			_loading = false;
+			if (onImageLoadSuccess != null)
+				onImageLoadSuccess(_image);
 		}
 		
 		private function isValidFileURL(url:String):Boolean {

@@ -1,13 +1,11 @@
 package app
 {
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
 	public final class SpriteSheet {
-		[Embed(source="/SpriteSheetPreview/src/assets/images/swordguy.png")]
-		public var SWORDGUY:Class;
-		
 		private var _model:AnimationModel;
 		private var _data:BitmapData;
 		private var _elapsed:Number = 0;
@@ -17,18 +15,21 @@ package app
 		private var _frameHeight:int;
 		private var _frameIndex:int;
 		
-		public function SpriteSheet(model:AnimationModel) {
-			_model = model;
-			_data = new SWORDGUY().bitmapData;
+		public function set image(image:Bitmap):void {
+			_data = image.bitmapData;
 		}
 		
-		public function draw(data:BitmapData, delta:int, containerWidth:int, containerHeight:int):void {
+		public function SpriteSheet(model:AnimationModel) {
+			_model = model;
+		}
+		
+		public function draw(data:BitmapData, delta:int, containerBounds:Rectangle):void {
 			if (_data == null)
 				return;
 			_frameWidth = _data.width / _model.cols;
 			_frameHeight = _data.height / _model.rows;
-			_drawPosition.x = (containerWidth - _frameWidth) * 0.5;
-			_drawPosition.y = (containerHeight - _frameHeight) * 0.5;
+			_drawPosition.x = (containerBounds.right - _frameWidth) * 0.5;
+			_drawPosition.y = (containerBounds.bottom - _frameHeight) * 0.5;
 			_frameIndex = getNextFrameIndex(delta);
 			
 			var row:int = _frameIndex / _model.cols;

@@ -7,13 +7,11 @@ package app
 		private var _rows:int = 1;
 		private var _cols:int = 1;
 		
-		public var url:String;
 		public var fps:int = 20;
 		public var loop:Boolean = true;
 		public var playing:Boolean = false;
 		public var totalFrames:int = 0;
 		public var currentFrame:int = 0;
-		
 		
 		public function get rows():int {
 			return _rows;
