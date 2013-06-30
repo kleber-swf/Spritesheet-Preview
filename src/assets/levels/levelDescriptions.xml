@@ -1,6 +1,0 @@
-<leveDescriptions>
-	<level index="0" name="Main">
-		<file filename="assets/levels/mainscreen.xml" />
-		<group name="AllThings" />
-	</level>
-</leveDescriptions>

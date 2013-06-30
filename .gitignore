@@ -1,3 +1,4 @@
 bin/
 bin-release/
 bin-debug/
+bin-release-temp/
