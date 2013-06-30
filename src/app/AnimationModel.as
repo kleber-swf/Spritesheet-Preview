@@ -1,7 +1,6 @@
 package app
 {
 	import flash.events.EventDispatcher;
-	import mx.utils.StringUtil;
 
 	[Bindable]
 	public final class AnimationModel extends EventDispatcher {

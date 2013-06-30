@@ -4,36 +4,38 @@ package app
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
-	public final class SpriteSheet
-	{
+	public final class SpriteSheet {
 		[Embed(source="/SpriteSheetPreview/src/assets/images/swordguy.png")]
 		public var SWORDGUY:Class;
 		
 		private var _model:AnimationModel;
-		
 		private var _data:BitmapData;
-		
 		private var _elapsed:Number = 0;
+		private var _drawPosition:Point = new Point();
+
+		private var _frameWidth:int;
+		private var _frameHeight:int;
+		private var _frameIndex:int;
 		
-		public function SpriteSheet(model:AnimationModel)
-		{
+		public function SpriteSheet(model:AnimationModel) {
 			_model = model;
 			_data = new SWORDGUY().bitmapData;
 		}
 		
-		public function draw(data:BitmapData, delta:int):void {
+		public function draw(data:BitmapData, delta:int, containerWidth:int, containerHeight:int):void {
 			if (_data == null)
 				return;
-			var frameWidth:int = _data.width / _model.cols;
-			var frameHeight:int = _data.height / _model.rows;
+			_frameWidth = _data.width / _model.cols;
+			_frameHeight = _data.height / _model.rows;
+			_drawPosition.x = (containerWidth - _frameWidth) * 0.5;
+			_drawPosition.y = (containerHeight - _frameHeight) * 0.5;
+			_frameIndex = getNextFrameIndex(delta);
 			
-			var frameIndex:int = getNextFrameIndex(delta);
-			
-			var row:int = frameIndex / _model.cols;
-			var col:int = frameIndex % _model.cols;
+			var row:int = _frameIndex / _model.cols;
+			var col:int = _frameIndex % _model.cols;
 			data.copyPixels(_data,
-				new Rectangle(frameWidth * col, frameHeight * row, frameWidth, frameHeight),
-				new Point(0, 0), null, null, false);
+				new Rectangle(_frameWidth * col, _frameHeight * row, _frameWidth, _frameHeight),
+				_drawPosition, null, null, false);
 		}
 		
 		private function getNextFrameIndex(delta:int):int {
