@@ -50,7 +50,6 @@
 			
 			import mx.controls.Alert;
 			import mx.core.IUIComponent;
-			import mx.events.AIREvent;
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
 			import mx.managers.DragManager;
@@ -154,15 +153,19 @@
 			
 			// TODO this could be better...
 			private function onKeyUp(event:KeyboardEvent):void {
-				if (event.charCode == Keyboard.ENTER || event.charCode == Keyboard.SPACE) {
-					togglePlay();
-					event.stopPropagation();
-					return;
-				}
-				if (event.keyCode == Keyboard.L) {
-					toggleLoop();
-					event.stopPropagation();
-					return;
+				switch (event.keyCode) {
+					case Keyboard.ENTER:
+						togglePlay();
+						event.stopPropagation();
+						return;
+					case Keyboard.L:
+						toggleLoop();
+						event.stopPropagation();
+						return;
+					case Keyboard.P:
+						togglePingPong();
+						event.stopPropagation();
+						return;
 				}
 			}
 			
@@ -315,7 +318,7 @@
 					selected="{_model.loop}" />
 		<s:CheckBox x="129"
 					label="Ping Pong"
-					toolTip="L"
+					toolTip="P"
 					change="pingpongCheckbox_changed(event)"
 					selected="{_model.pingpong}"
 					includeIn="Initial"
@@ -337,7 +340,7 @@
 				   change="playButton_change(event)"
 				   selected="{_model.playing}"
 				   styleName="Empty"
-				   toolTip="Space"
+				   toolTip="Enter"
 				   upSkin="@Embed('../assets/images/play.png')"
 				   overSkin="@Embed('../assets/images/play-over.png')"
 				   downSkin="@Embed('../assets/images/play-down.png')"

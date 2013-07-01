@@ -1,9 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <update xmlns="http://ns.adobe.com/air/framework/update/description/1.0">
-<versionNumber>1.1.0</versionNumber>
+<versionNumber>1.1.1</versionNumber>
 <url>http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/SpriteSheetPreview.air</url>
 <description><![CDATA[
+1.1.1:
+	* keyboard shortcut fix
+
+1.1.0
+	New Features:
+		* ping pong animation
+		* scroll change sliders
+		* scroll change values (rows, cols, fps)
+		* scroll change zoom when stage is focused
+	Improvements:
+		* draw routines improvements
+		* better UI responseness
+		* no 3rd party libraries dependency
+	Bug Fixes:
+		* frame indexes were wrong by 1
+		* general bug fixing
+
 1.0.0
-Initial version
+	Initial version
 ]]></description>
 </update>
