@@ -50,6 +50,7 @@
 			
 			import mx.controls.Alert;
 			import mx.core.IUIComponent;
+			import mx.events.AIREvent;
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
 			import mx.managers.DragManager;
@@ -262,8 +263,6 @@
 			
 			private function togglePlay():void {
 				_model.playing = !_model.playing;
-				if (_model.playing)
-					_spriteSheet.resetPlayDirection();
 			}
 			
 			private function toggleLoop():void {
@@ -272,6 +271,8 @@
 			
 			private function togglePingPong():void {
 				_model.pingpong = !_model.pingpong;
+				if (!_model.pingpong)
+					_spriteSheet.resetPlayDirection();
 			}
 			
 			private function createDrawBitmap():void {
@@ -331,7 +332,7 @@
 		<s:Label x="44" text="fps" verticalCenter="0" />
 		<mx:Button id="playButton"
 				   toggle="true"
-				   x="215"
+				   x="231"
 				   verticalCenter="0"
 				   change="playButton_change(event)"
 				   selected="{_model.playing}"
@@ -344,7 +345,7 @@
 				   selectedOverSkin="@Embed('../assets/images/pause-over.png')"
 				   selectedDownSkin="@Embed('../assets/images/pause-down.png')" />
 		<s:HSlider id="frameSlider"
-				   left="245"
+				   left="260"
 				   right="10"
 				   verticalCenter="0"
 				   change="frameSlider_change(event)"
@@ -518,7 +519,7 @@
 						   click="navigateToURL(new URLRequest('http://kleber-swf.blogspot.com'))"
 						   color="#9AAEC4"
 						   horizontalCenter="0" />
-			<s:Image x="11" y="12" source="@Embed('../assets/icons/icon-36.png')" />
+			<s:Image x="11" y="12" source="@Embed('assets/icons/icon-36.png')" />
 			<s:Label id="versionLabel"
 					 y="109"
 					 width="165"
