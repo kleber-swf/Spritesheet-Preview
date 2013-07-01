@@ -3,23 +3,25 @@
 					   xmlns:s="library://ns.adobe.com/flex/spark"
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
 					   xmlns:provider="com.pblabs.engine.resource.provider.*"
-					   width="720" height="500" minWidth="720" minHeight="500"
-					   applicationComplete="application_applicationComplete(event)"
+					   width="780"
+					   height="520"
+					   minWidth="780"
+					   minHeight="520"
 					   backgroundColor="#5A5E67"
-					   creationComplete="application_creationComplete(event)" currentState="Initial"
-					   enterFrame="application_enterFrame(event)" frameRate="60"
-					   invoke="application_invoke(event)" showStatusBar="false"
+					   currentState="Initial"
+					   frameRate="60"
+					   showStatusBar="false"
 					   title="SpriteSheet Preview"
+					   invoke="application_invoke(event)"
+					   applicationComplete="application_applicationComplete(event)"
+					   creationComplete="application_creationComplete(event)"
+					   enterFrame="application_enterFrame(event)"
 					   nativeDragDrop.Initial="application_nativeDragDrop(event)"
 					   nativeDragEnter.Initial="application_nativeDragEnter(event)">
 	<s:states>
-		<s:State name="Initial"/>
-		<s:State name="About"/>
+		<s:State name="Initial" />
+		<s:State name="About" />
 	</s:states>
-
-	<fx:Declarations>
-		<!-- Place non-visual elements (e.g., services, value objects) here -->
-	</fx:Declarations>
 
 	<fx:Style>
 		@namespace s "library://ns.adobe.com/flex/spark";
@@ -31,6 +33,11 @@
 			borderColor:#333333;
 			shadowColor: #323232;
 			dropShadowVisible:true;
+		}
+		
+		.Empty {
+			backgroundAlpha: 0;
+			borderVisible: false;
 		}
 	</fx:Style>
 
@@ -48,6 +55,7 @@
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
 			import mx.managers.DragManager;
+			import mx.managers.FocusManager;
 			
 			import spark.events.TextOperationEvent;
 			
@@ -61,8 +69,10 @@
 			private var _drawBitmap:Bitmap;
 			private var _buffer:BitmapData;
 			private var _matrix:Matrix = new Matrix();
-
+			
 			[Bindable] private var _scale:Number = 1;
+			[Bindable] private var _minScale:Number = 0.5;
+			[Bindable] private var _maxScale:Number = 3;
 			[Bindable] private var _hasContent:Boolean;
 			
 			private var _lastTime:int = 0;
@@ -86,6 +96,10 @@
 				_spriteSheet = new SpriteSheet(_model);
 				createDrawBitmap();
 				stageContainer.addChild(_drawBitmap);
+				
+				// install keyboard shortcuts
+				stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp, false, int.MAX_VALUE);
+				stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel, false, int.MAX_VALUE);
 			}
 			
 			private function application_invoke(event:InvokeEvent):void {
@@ -111,8 +125,12 @@
 				scale = (event.target as HSlider).value;
 			}
 			
-			protected function zoomLabel_change(event:TextOperationEvent):void {
+			private function zoomLabel_change(event:TextOperationEvent):void {
 				scale = valueChanged(event, 100) * 0.01;
+			}
+			
+			private function contentContainer_click(event:MouseEvent):void {
+				event.target.setFocus();
 			}
 			
 			private function application_enterFrame(event:Event):void {
@@ -132,6 +150,23 @@
 				_bitmapData.fillRect(_bitmapData.rect, 0x000000);
 				_bitmapData.draw(_buffer, _matrix);
 				_bitmapData.unlock();
+			}
+			
+			private function onKeyUp(event:KeyboardEvent):void {
+				if (event.charCode == Keyboard.ENTER || event.charCode == Keyboard.SPACE) {
+					togglePlay();
+					event.stopPropagation();
+					return;
+				}
+				if (event.keyCode == Keyboard.L) {
+					toggleLoop();
+					event.stopPropagation();
+					return;
+				}
+			}
+			
+			private function onMouseWheel(event:MouseEvent):void {
+				scale = _scale + (event.delta / 3 * zoomSlider.stepSize * 10);
 			}
 			
 			
@@ -158,11 +193,11 @@
 			/* ===== [ANIMATION DATA CHANGING] ===== */
 			
 			private function rowsInput_change(event:TextOperationEvent):void {
-				_model.rows = valueChanged(event, 0);
+				_model.rows = valueChanged(event, 1);
 			}
 			
 			private function colsInput_change(event:TextOperationEvent):void {
-				_model.cols = valueChanged(event, 0);
+				_model.cols = valueChanged(event, 1);
 			}
 			
 			private function fpsInput_change(event:TextOperationEvent):void {
@@ -170,11 +205,11 @@
 			}
 			
 			private function loopCheckbox_changed(event:Event):void {
-				_model.loop = (event.target as CheckBox).selected;
+				toggleLoop();
 			}
 			
 			private function playButton_change(event:Event):void {
-				_model.playing = (event.target as ToggleButton).selected;
+				togglePlay();
 			}
 			
 			private function frameSlider_change(event:Event):void {
@@ -186,33 +221,44 @@
 			/* ===== [OPERATIONS] ===== */
 			
 			private function set scale(value:Number):void {
+				if (value < _minScale)
+					value = _minScale;
+				if (value > _maxScale)
+					value = _maxScale;
 				_scale = value;
 				_matrix.identity();
 				_matrix.scale(_scale, _scale);
-				_buffer = new BitmapData(stageContainer.width/_scale, stageContainer.height/_scale, true, 0x000000);
-//				_matrix.translate(
-//					(stageContainer.width - (stageContainer.width * _scale)) * 0.5,
-//					(stageContainer.height - (stageContainer.height * _scale)) * 0.5
-//				);
+				
+//				var width:int = _spriteSheet ? Math.min(_spriteSheet.width, stageContainer.width / _scale) : stageContainer.width / _scale;
+//				var height:int = _spriteSheet ? Math.min(_spriteSheet.height, stageContainer.height / _scale) : stageContainer.height / _scale;
+				
+//				_matrix.translate((stageContainer.width - width) * 0.5, (stageContainer.height - height) * 0.5);
+				
+				_buffer = new BitmapData(stageContainer.width / _scale, stageContainer.height / _scale, true, 0x000000);
 			}
 			
 			private function valueChanged(event:TextOperationEvent, defaultValue:int):int {
 				var input:TextInput = event.target as TextInput;
-				var n:int;
-				try {
-					n = parseInt(input.text);
-				} catch (e:Error) {
+				var n:Number = parseInt(input.text);
+				if (isNaN(n))
 					n = defaultValue;
-				}
 				input.text = n.toString();
 				return n;
 			}
 			
+			private function togglePlay():void {
+				_model.playing = !_model.playing;
+			}
+			
+			private function toggleLoop():void {
+				_model.loop = !_model.loop;
+			}
+			
 			private function createDrawBitmap():void {
 				var data:BitmapData = new BitmapData(stageContainer.width, stageContainer.height, true, 0x000000);
-				if (_drawBitmap == null) {
+				if (_drawBitmap == null)
 					_drawBitmap = new Bitmap(data, "auto", true);
-				} else {
+				else {
 					data.copyPixels(_bitmapData, _bitmapData.rect, new Point());
 					_drawBitmap.bitmapData.dispose();
 					_drawBitmap.bitmapData = data;
@@ -229,81 +275,230 @@
 				_spriteSheet.image = image;
 				_hasContent = true;
 			}
-			
 		]]>
 	</fx:Script>
-	<s:BorderContainer id="topBar" left="160" right="87" top="10" height="32" styleName="Tools" enabled="{_hasContent}">
+	<s:BorderContainer id="topBar"
+					   left="160"
+					   right="87"
+					   top="10"
+					   height="32"
+					   styleName="Tools"
+					   enabled="{_hasContent}">
 
-		<s:CheckBox id="loopCheckbox" x="72" y="5" label="Loop" change="loopCheckbox_changed(event)"
-					selected="{_model.loop}"/>
-		<s:TextInput id="fpsInput" x="10" y="4" width="31" height="20"
-					 change="fpsInput_change(event)" text="{_model.fps}" textAlign="right"/>
-		<s:Label x="44" y="10" text="fps"/>
-		<s:ToggleButton id="playButton" x="153" y="4" width="56"
-						label="{_model.playing ? 'Pause' : 'Play'}"
-						change="playButton_change(event)" selected="{_model.playing}"/>
-		<s:HSlider id="frameSlider" y="9" left="217" right="10" change="frameSlider_change(event)"
-				   liveDragging="true" maximum="{_model.totalFrames}" minimum="0" stepSize="1"
-				   value="{_model.currentFrame}"/>
+		<s:CheckBox id="loopCheckbox"
+					x="72"
+					y="5"
+					label="Loop"
+					toolTip="L"
+					change="loopCheckbox_changed(event)"
+					selected="{_model.loop}" />
+		<s:TextInput id="fpsInput"
+					 x="10"
+					 y="4"
+					 width="31"
+					 height="20"
+					 change="fpsInput_change(event)"
+					 text="{_model.fps}"
+					 textAlign="right" />
+		<s:Label x="44" y="10" text="fps" />
+		<mx:Button id="playButton"
+				   toggle="true"
+				   x="215"
+				   verticalCenter="0"
+				   change="playButton_change(event)"
+				   selected="{_model.playing}"
+				   styleName="Empty"
+				   toolTip="Space"
+				   upSkin="@Embed('../assets/images/play.png')"
+				   overSkin="@Embed('../assets/images/play-over.png')"
+				   downSkin="@Embed('../assets/images/play-down.png')"
+				   selectedUpSkin="@Embed('../assets/images/pause.png')"
+				   selectedOverSkin="@Embed('../assets/images/pause-over.png')"
+				   selectedDownSkin="@Embed('../assets/images/pause-down.png')" />
+		<s:HSlider id="frameSlider"
+				   left="245"
+				   right="10"
+				   verticalCenter="0"
+				   change="frameSlider_change(event)"
+				   liveDragging="true"
+				   maximum="{_model.totalFrames}"
+				   minimum="0"
+				   stepSize="1"
+				   value="{_model.currentFrame}" />
 	</s:BorderContainer>
-	<s:BorderContainer left="160" right="10" top="50" bottom="50" borderVisible="false"
-					   dropShadowVisible="false">
-		<s:BitmapImage id="transparentBackground" left="0" right="0" top="0" bottom="0"
-					   fillMode="repeat" source="@Embed('assets/images/transparency.png')"/>
-		<s:BorderContainer id="background" left="0" right="0" top="0" bottom="0"
+	<s:BorderContainer id="contentContainer"
+					   left="160"
+					   right="10"
+					   top="50"
+					   bottom="50"
+					   borderVisible="false"
+					   dropShadowVisible="false"
+					   click="contentContainer_click(event)">
+		<s:BitmapImage id="transparentBackground"
+					   left="0"
+					   right="0"
+					   top="0"
+					   bottom="0"
+					   fillMode="repeat"
+					   source="@Embed('../assets/images/transparency.png')" />
+		<s:BorderContainer id="background"
+						   left="0"
+						   right="0"
+						   top="0"
+						   bottom="0"
 						   backgroundAlpha="{backgroundAlphaSlider.value}"
 						   backgroundColor="{backgroundColorPicker.selectedColor}"
-						   borderVisible="false" dropShadowVisible="false"/>
-		<mx:UIComponent id="stageContainer" left="0" right="0" top="0" bottom="0"
-						resize="stageContainer_resize(event)"/>
+						   borderVisible="false"
+						   dropShadowVisible="false" />
+		<s:BitmapImage id="dragAndDropImage"
+					   horizontalCenter="0"
+					   verticalCenter="0"
+					   visible="{!_hasContent}"
+					   source="@Embed('../assets/images/drag-n-drop.png')" />
+		<mx:UIComponent id="stageContainer"
+						left="0"
+						right="0"
+						top="0"
+						bottom="0"
+						resize="stageContainer_resize(event)" />
 	</s:BorderContainer>
-	
-	<s:BorderContainer id="bottomBar" left="160" right="10" bottom="10" height="32" styleName="Tools" enabled="{_hasContent}">
-		<s:HSlider id="zoomSlider" y="10" right="59" change="zoomSlider_change(event)" maximum="3"
-				   minimum="0.01" showDataTip="false" stepSize="0.01" value="{_scale}"
-				   minimum.Initial="0.1"/>
-		<s:TextInput id="zoomLabel" y="4" right="9" width="42" change="zoomLabel_change(event)"
-					 text="{(zoomSlider.value*100).toFixed(0)}%" textAlign="right"/>
-		<s:Label x="10" y="10" text="Background"/>
-		<mx:ColorPicker id="backgroundColorPicker" x="82" y="4" selectedColor="#5A5E67"
-						showTextField="true"/>
-		<s:HSlider id="backgroundAlphaSlider" x="112" y="10" width="60" maximum="1" minimum="0"
-				   showDataTip="false" stepSize="0.01" value="1"/>
+
+	<s:BorderContainer id="bottomBar"
+					   left="160"
+					   right="10"
+					   bottom="10"
+					   height="32"
+					   styleName="Tools"
+					   enabled="{_hasContent}">
+		<s:HSlider id="zoomSlider"
+				   y="10"
+				   right="59"
+				   change="zoomSlider_change(event)"
+				   maximum="{_maxScale}"
+				   minimum="{_minScale}"
+				   value="{_scale}"
+				   showDataTip="false"
+				   stepSize="0.01" />
+		<s:TextInput id="zoomLabel"
+					 y="4"
+					 right="9"
+					 width="42"
+					 change="zoomLabel_change(event)"
+					 text="{(zoomSlider.value*100).toFixed(0)}%"
+					 textAlign="right" />
+		<s:Label x="10" y="10" text="Background" />
+		<mx:ColorPicker id="backgroundColorPicker"
+						x="82"
+						y="4"
+						selectedColor="#5A5E67"
+						showTextField="true" />
+		<s:HSlider id="backgroundAlphaSlider"
+				   x="112"
+				   y="10"
+				   width="60"
+				   maximum="1"
+				   minimum="0"
+				   showDataTip="false"
+				   stepSize="0.01"
+				   value="1" />
 	</s:BorderContainer>
-	<s:BorderContainer y="10" right="10" width="69" height="31" styleName="Tools">
-		<s:Button id="aboutButton" x="6" y="6" width="55" height="18" label="About" fontSize="10"
-				  click.Initial="currentState = 'About'"/>
+	<s:BorderContainer y="10"
+					   right="10"
+					   width="69"
+					   height="31"
+					   styleName="Tools">
+		<s:Button id="aboutButton"
+				  x="6"
+				  width="55"
+				  height="18"
+				  label="About"
+				  fontSize="10"
+				  click.Initial="currentState = 'About'"
+				  y.About="6"
+				  verticalCenter.Initial="0" />
 	</s:BorderContainer>
-	<s:BorderContainer left="10" top="10" bottom="10" width="142" styleName="Tools" enabled="{_hasContent}">
-		<s:Panel left="0" right="0" top="0" height="117" backgroundColor="#444444"
-				 dropShadowVisible="false" styleName="Tools" title="Info">
-			<s:Label x="9" y="19" text="Rows"/>
-			<s:Label x="9" y="49" text="Cols"/>
-			<s:TextInput id="rowsInput" y="13" right="10" width="41" change="rowsInput_change(event)"
-						 text="{_model.rows}" textAlign="right"/>
-			<s:TextInput id="colsInput" y="43" right="10" width="41" change="colsInput_change(event)"
-						 text="{_model.cols}" textAlign="right"/>
+	<s:BorderContainer left="10"
+					   top="10"
+					   bottom="10"
+					   width="142"
+					   styleName="Tools"
+					   enabled="{_hasContent}">
+		<s:Panel left="0"
+				 right="0"
+				 top="0"
+				 height="117"
+				 backgroundColor="#444444"
+				 dropShadowVisible="false"
+				 styleName="Tools"
+				 title="Info">
+			<s:Label x="9" y="19" text="Rows" />
+			<s:Label x="9" y="49" text="Cols" />
+			<s:TextInput id="rowsInput"
+						 y="13"
+						 right="10"
+						 width="41"
+						 change="rowsInput_change(event)"
+						 text="{_model.rows}"
+						 textAlign="right" />
+			<s:TextInput id="colsInput"
+						 y="43"
+						 right="10"
+						 width="41"
+						 change="colsInput_change(event)"
+						 text="{_model.cols}"
+						 textAlign="right" />
 		</s:Panel>
 	</s:BorderContainer>
-	
-	<s:BorderContainer includeIn="About" left="0" right="0" top="0" bottom="0" backgroundAlpha="0.81"
+
+	<s:BorderContainer includeIn="About"
+					   left="0"
+					   right="0"
+					   top="0"
+					   bottom="0"
+					   backgroundAlpha="0.81"
 					   backgroundColor="#434343"
 					   click.About="currentState = 'Initial'">
-		<s:BorderContainer width="344" height="193" backgroundColor="#666666" horizontalCenter="-4"
-						   styleName="Tools" verticalCenter="0">
-			<s:Label y="15" color="#F3F3F3" fontFamily="Arial" fontSize="20" fontStyle="italic"
-					 fontWeight="bold" horizontalCenter="7" text="SpriteSheet Preview"/>
-			<mx:HRule y="39" width="264" height="4" horizontalCenter="18"/>
-			<s:Label y="55" width="300" color="#F3F3F3" horizontalCenter="0"
+		<s:BorderContainer width="344"
+						   height="193"
+						   backgroundColor="#666666"
+						   horizontalCenter="-4"
+						   styleName="Tools"
+						   verticalCenter="0">
+			<s:Label y="15"
+					 color="#F3F3F3"
+					 fontFamily="Arial"
+					 fontSize="20"
+					 fontStyle="italic"
+					 fontWeight="bold"
+					 horizontalCenter="7"
+					 text="SpriteSheet Preview" />
+			<mx:HRule y="39"
+					  width="264"
+					  height="4"
+					  horizontalCenter="18" />
+			<s:Label y="55"
+					 width="300"
+					 color="#F3F3F3"
+					 horizontalCenter="0"
 					 text="A simple program to preview sprite sheets.&#xd;Just drag your spritesheet into the indicated area and set rows and cols. Hit play e see the preview."
-					 textAlign="center"/>
-			<s:Label bottom="33" color="#F3F3F3" horizontalCenter="0" text="Kleber Lopes da Silva"/>
-			<mx:LinkButton bottom="12" label="http://kleber-swf.blogspot.com"
+					 textAlign="center" />
+			<s:Label bottom="33"
+					 color="#F3F3F3"
+					 horizontalCenter="0"
+					 text="Kleber Lopes da Silva" />
+			<mx:LinkButton bottom="12"
+						   label="http://kleber-swf.blogspot.com"
 						   click="navigateToURL(new URLRequest('http://kleber-swf.blogspot.com'))"
-						   color="#9AAEC4" horizontalCenter="0"/>
-			<s:Image x="11" y="12" source="assets/icons/icon-36.png"/>
-			<s:Label id="versionLabel" y="109" width="165" color="#F3F3F3" horizontalCenter="0"
-					 text="Version {_updater.version}" textAlign="center"/>
+						   color="#9AAEC4"
+						   horizontalCenter="0" />
+			<s:Image x="11" y="12" source="assets/icons/icon-36.png" />
+			<s:Label id="versionLabel"
+					 y="109"
+					 width="165"
+					 color="#F3F3F3"
+					 horizontalCenter="0"
+					 text="Version {_updater.version}"
+					 textAlign="center" />
 		</s:BorderContainer>
-	</s:BorderContainer>	
+	</s:BorderContainer>
 </s:WindowedApplication>

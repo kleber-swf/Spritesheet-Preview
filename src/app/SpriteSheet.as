@@ -1,5 +1,4 @@
-package app
-{
+package app {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Point;
@@ -10,13 +9,21 @@ package app
 		private var _data:BitmapData;
 		private var _elapsed:Number = 0;
 		private var _drawPosition:Point = new Point();
-
+		
 		private var _frameWidth:int;
 		private var _frameHeight:int;
 		private var _frameIndex:int;
 		
 		public function set image(image:Bitmap):void {
 			_data = image.bitmapData;
+		}
+		
+		public function get width():int {
+			return _frameWidth;
+		}
+		
+		public function get height():int {
+			return _frameHeight;
 		}
 		
 		public function SpriteSheet(model:AnimationModel) {
@@ -35,8 +42,8 @@ package app
 			var row:int = _frameIndex / _model.cols;
 			var col:int = _frameIndex % _model.cols;
 			data.copyPixels(_data,
-				new Rectangle(_frameWidth * col, _frameHeight * row, _frameWidth, _frameHeight),
-				_drawPosition, null, null, false);
+							new Rectangle(_frameWidth * col, _frameHeight * row, _frameWidth, _frameHeight),
+							_drawPosition, null, null, false);
 		}
 		
 		private function getNextFrameIndex(delta:int):int {
