@@ -48,16 +48,15 @@
 			import app.SpriteSheet;
 			import app.UpdateController;
 			
-			import flash.utils.getTimer;
-			
 			import mx.controls.Alert;
 			import mx.core.IUIComponent;
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
 			import mx.managers.DragManager;
-			import mx.managers.FocusManager;
 			
 			import spark.events.TextOperationEvent;
+			
+			private static const WHEEL_PAGE_SIZE:int = 3;
 			
 			[Bindable] private var _model:AnimationModel;
 			[Bindable] private var _updater:UpdateController;
@@ -152,6 +151,7 @@
 				_bitmapData.unlock();
 			}
 			
+			// TODO this could be better...
 			private function onKeyUp(event:KeyboardEvent):void {
 				if (event.charCode == Keyboard.ENTER || event.charCode == Keyboard.SPACE) {
 					togglePlay();
@@ -165,8 +165,28 @@
 				}
 			}
 			
+			// TODO this could be better...
 			private function onMouseWheel(event:MouseEvent):void {
-				scale = _scale + (event.delta / 3 * zoomSlider.stepSize * 10);
+				var focusedComponent:UIComponent = focusManager.getFocus() as UIComponent;
+				if (!focusedComponent) {
+					focusedComponent = stage.focus as UIComponent;
+					if (!focusedComponent)
+						return;
+				}
+				var focusedComponentID:String = focusedComponent.id;
+				switch (focusedComponentID) {
+					case "stageContainer":
+						scale = _scale + (event.delta / WHEEL_PAGE_SIZE * zoomSlider.stepSize * 10);
+						break;
+					case "rowsInput":
+						_model.rows += event.delta / WHEEL_PAGE_SIZE;
+						break;
+					case "colsInput":
+						_model.cols += event.delta / WHEEL_PAGE_SIZE;
+						break;
+					case "fpsInput":
+						_model.fps += event.delta / WHEEL_PAGE_SIZE;
+				}
 			}
 			
 			
@@ -208,6 +228,10 @@
 				toggleLoop();
 			}
 			
+			private function pingpongCheckbox_changed(event:Event):void {
+				togglePingPong();
+			}
+			
 			private function playButton_change(event:Event):void {
 				togglePlay();
 			}
@@ -221,19 +245,9 @@
 			/* ===== [OPERATIONS] ===== */
 			
 			private function set scale(value:Number):void {
-				if (value < _minScale)
-					value = _minScale;
-				if (value > _maxScale)
-					value = _maxScale;
-				_scale = value;
+				_scale = Math.max(_minScale, Math.min(_maxScale, value));
 				_matrix.identity();
 				_matrix.scale(_scale, _scale);
-				
-//				var width:int = _spriteSheet ? Math.min(_spriteSheet.width, stageContainer.width / _scale) : stageContainer.width / _scale;
-//				var height:int = _spriteSheet ? Math.min(_spriteSheet.height, stageContainer.height / _scale) : stageContainer.height / _scale;
-				
-//				_matrix.translate((stageContainer.width - width) * 0.5, (stageContainer.height - height) * 0.5);
-				
 				_buffer = new BitmapData(stageContainer.width / _scale, stageContainer.height / _scale, true, 0x000000);
 			}
 			
@@ -248,10 +262,16 @@
 			
 			private function togglePlay():void {
 				_model.playing = !_model.playing;
+				if (_model.playing)
+					_spriteSheet.resetPlayDirection();
 			}
 			
 			private function toggleLoop():void {
 				_model.loop = !_model.loop;
+			}
+			
+			private function togglePingPong():void {
+				_model.pingpong = !_model.pingpong;
 			}
 			
 			private function createDrawBitmap():void {
@@ -287,20 +307,28 @@
 
 		<s:CheckBox id="loopCheckbox"
 					x="72"
-					y="5"
+					verticalCenter="0"
 					label="Loop"
 					toolTip="L"
 					change="loopCheckbox_changed(event)"
 					selected="{_model.loop}" />
+		<s:CheckBox x="129"
+					label="Ping Pong"
+					toolTip="L"
+					change="pingpongCheckbox_changed(event)"
+					selected="{_model.pingpong}"
+					includeIn="Initial"
+					id="pingpongCheckbox"
+					verticalCenter="0" />
 		<s:TextInput id="fpsInput"
 					 x="10"
-					 y="4"
 					 width="31"
 					 height="20"
+					 verticalCenter="0"
 					 change="fpsInput_change(event)"
 					 text="{_model.fps}"
 					 textAlign="right" />
-		<s:Label x="44" y="10" text="fps" />
+		<s:Label x="44" text="fps" verticalCenter="0" />
 		<mx:Button id="playButton"
 				   toggle="true"
 				   x="215"
@@ -321,7 +349,7 @@
 				   verticalCenter="0"
 				   change="frameSlider_change(event)"
 				   liveDragging="true"
-				   maximum="{_model.totalFrames}"
+				   maximum="{_model.totalFrames-1}"
 				   minimum="0"
 				   stepSize="1"
 				   value="{_model.currentFrame}" />
@@ -371,8 +399,8 @@
 					   styleName="Tools"
 					   enabled="{_hasContent}">
 		<s:HSlider id="zoomSlider"
-				   y="10"
 				   right="59"
+				   verticalCenter="0"
 				   change="zoomSlider_change(event)"
 				   maximum="{_maxScale}"
 				   minimum="{_minScale}"
@@ -380,21 +408,21 @@
 				   showDataTip="false"
 				   stepSize="0.01" />
 		<s:TextInput id="zoomLabel"
-					 y="4"
 					 right="9"
+					 verticalCenter="0"
 					 width="42"
 					 change="zoomLabel_change(event)"
 					 text="{(zoomSlider.value*100).toFixed(0)}%"
 					 textAlign="right" />
-		<s:Label x="10" y="10" text="Background" />
+		<s:Label x="10" text="Background" verticalCenter="0" />
 		<mx:ColorPicker id="backgroundColorPicker"
 						x="82"
-						y="4"
+						verticalCenter="0"
 						selectedColor="#5A5E67"
 						showTextField="true" />
 		<s:HSlider id="backgroundAlphaSlider"
 				   x="112"
-				   y="10"
+				   verticalCenter="0"
 				   width="60"
 				   maximum="1"
 				   minimum="0"
@@ -411,11 +439,10 @@
 				  x="6"
 				  width="55"
 				  height="18"
+				  verticalCenter="0"
 				  label="About"
 				  fontSize="10"
-				  click.Initial="currentState = 'About'"
-				  y.About="6"
-				  verticalCenter.Initial="0" />
+				  click.Initial="currentState = 'About'" />
 	</s:BorderContainer>
 	<s:BorderContainer left="10"
 					   top="10"
@@ -491,7 +518,7 @@
 						   click="navigateToURL(new URLRequest('http://kleber-swf.blogspot.com'))"
 						   color="#9AAEC4"
 						   horizontalCenter="0" />
-			<s:Image x="11" y="12" source="assets/icons/icon-36.png" />
+			<s:Image x="11" y="12" source="@Embed('../assets/icons/icon-36.png')" />
 			<s:Label id="versionLabel"
 					 y="109"
 					 width="165"

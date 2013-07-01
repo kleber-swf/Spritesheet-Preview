@@ -13,6 +13,7 @@ package app {
 		private var _frameWidth:int;
 		private var _frameHeight:int;
 		private var _frameIndex:int;
+		private var _frameInc:int = 1;
 		
 		public function set image(image:Bitmap):void {
 			_data = image.bitmapData;
@@ -52,13 +53,32 @@ package app {
 				_elapsed += delta;
 				if (_elapsed >= delay) {
 					_elapsed = 0;
-					var nextFrame:int = (_model.totalFrames + _model.currentFrame + 1) % _model.totalFrames;
-					if (!_model.loop && nextFrame == 0 && nextFrame < _model.currentFrame)
-						_model.playing = false;
+					var nextFrame:int = (_model.totalFrames + _model.currentFrame + _frameInc) % _model.totalFrames;
+					var isFirst:Boolean = nextFrame == 0;
+					var isLast:Boolean = nextFrame == _model.totalFrames - 1;
+					
+					if (isFirst && _model.pingpong) {
+						_frameInc = 1;
+						if (!_model.loop)
+							_model.playing = false;
+						
+					}
+					if (isLast) {
+						if (_model.pingpong)
+							_frameInc = -1;
+						else {
+							if (!_model.loop)
+								_model.playing = false;
+						}
+					}
 					_model.currentFrame = nextFrame;
 				}
 			}
 			return _model.currentFrame;
+		}
+		
+		public function resetPlayDirection():void {
+			_frameInc = 1;
 		}
 	}
 }
