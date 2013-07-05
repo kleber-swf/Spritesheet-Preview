@@ -49,8 +49,6 @@
 			import mx.events.ResizeEvent;
 			import mx.managers.DragManager;
 			
-			import spark.events.TextOperationEvent;
-			
 			private static const WHEEL_PAGE_SIZE:int = 3;
 			
 			[Bindable] private var _model:AnimationModel;
@@ -150,6 +148,8 @@
 			private function onKeyUp(event:KeyboardEvent):void {
 				switch (event.keyCode) {
 					case Keyboard.ENTER:
+						if (!event.ctrlKey)
+							return;
 						togglePlay();
 						event.stopPropagation();
 						return;
@@ -212,11 +212,11 @@
 			}
 			
 			private function startFrameInput_change(event:Event):void {
-				_model.startFrame = valueChanged(event);
+				_model.startFrame = valueChanged(event, event.target.value - 1);
 			}
 			
 			private function endFrameInput_change(event:Event):void {
-				_model.endFrame = valueChanged(event);
+				_model.endFrame = valueChanged(event, event.target.value - 1);
 			}
 			
 			private function fpsInput_change(event:Event):void {
@@ -237,7 +237,7 @@
 			
 			private function frameSlider_change(event:Event):void {
 				_model.playing = false;
-				_model.currentFrame = (event.target as HSlider).value;
+				_model.currentFrame = (event.target as HSlider).value - 1;
 			}
 			
 			
@@ -250,10 +250,10 @@
 				_buffer = new BitmapData(stageContainer.width / _scale, stageContainer.height / _scale, true, 0x000000);
 			}
 			
-			private function valueChanged(event:Event):int {
-				var value:Number = (event.target as NumericStepper).value;
+			private function valueChanged(event:Event, value:Number = -1):int {
+				value = value < 0 ? event.target.value : value;
 				value = Math.max(1, isNaN(value) ? 1 : value);
-				(event.target as NumericStepper).value = value;
+				event.target.value = value;
 				return value;
 			}
 			
@@ -334,7 +334,7 @@
 				   verticalCenter="0"
 				   change="playButton_change(event)"
 				   selected="{_model.playing}"
-				   toolTip="Enter"
+				   toolTip="Ctrl + Enter"
 				   upSkin="@Embed('../assets/images/play.png')"
 				   overSkin="@Embed('../assets/images/play-over.png')"
 				   downSkin="@Embed('../assets/images/play-down.png')"
@@ -347,10 +347,11 @@
 				   verticalCenter="0"
 				   change="frameSlider_change(event)"
 				   liveDragging="true"
-				   minimum="{_model.startFrame}"
-				   maximum="{_model.endFrame}"
+				   minimum="{_model.startFrame+1}"
+				   maximum="{_model.endFrame+1}"
 				   stepSize="1"
-				   value="{_model.currentFrame}" />
+				   dataTipPrecision="0"
+				   value="{_model.currentFrame+1}" />
 	</s:BorderContainer>
 	<s:BorderContainer id="contentContainer"
 					   left="160"
@@ -487,18 +488,18 @@
 							  y="85"
 							  right="10"
 							  width="61"
-							  value="{_model.startFrame}"
-							  minimum="0"
-							  maximum="{_model.totalFrames-1}"
+							  value="{_model.startFrame+1}"
+							  minimum="1"
+							  maximum="{_model.totalFrames}"
 							  textAlign="right"
 							  change="startFrameInput_change(event)" />
 			<s:NumericStepper id="endFrameInput"
 							  y="113"
 							  right="10"
 							  width="61"
-							  value="{_model.endFrame}"
-							  minimum="{_model.startFrame}"
-							  maximum="{_model.totalFrames-1}"
+							  value="{_model.endFrame+1}"
+							  minimum="{_model.startFrame+1}"
+							  maximum="{_model.totalFrames}"
 							  textAlign="right"
 							  change="endFrameInput_change(event)" />
 			<s:NumericStepper id="colsInput"
