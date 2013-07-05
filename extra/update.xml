@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <update xmlns="http://ns.adobe.com/air/framework/update/description/1.0">
-<versionNumber>1.2.0</versionNumber>
+<versionNumber>1.2.3</versionNumber>
 <url>http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/SpriteSheetPreview.air</url>
-<description><![CDATA[1.2.0:
+<description><![CDATA[1.2.3:
+	* Open file button
+
+1.2.2:
 	* Start and end frame configurable (issue #8)
 	* Play shortcut changed to Ctrl+Enter due numeric steppers events
+	* GUI fixes
 
 1.1.2:
 	* Numeric Steppers on rows, cols, fps and zoom: easier to change

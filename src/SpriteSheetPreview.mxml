@@ -68,6 +68,7 @@
 			[Bindable] private var _hasContent:Boolean;
 			
 			private var _lastTime:int = 0;
+			private var _lastDirectory:String;
 			
 			
 			/* ===== [INITIALIZATION] ===== */
@@ -142,6 +143,18 @@
 				_bitmapData.fillRect(_bitmapData.rect, 0x000000);
 				_bitmapData.draw(_buffer, _matrix);
 				_bitmapData.unlock();
+			}
+			
+			private function openButton_click(event:MouseEvent):void {
+				if (!_lastDirectory)
+					_lastDirectory = File.desktopDirectory.url;
+				var file:File = new File(_lastDirectory);
+				file.addEventListener(FileListEvent.SELECT_MULTIPLE, openFile);
+				file.browseForOpenMultiple("Choose the sprites");
+			}
+			
+			private function openFile(event:FileListEvent):void {
+				_resources.imageURL = event.files[0].url;
 			}
 			
 			// TODO this could be better...
@@ -314,19 +327,20 @@
 					toolTip="P"
 					change="pingpongCheckbox_changed(event)"
 					selected="{_model.pingpong}"
-					includeIn="Initial"
 					id="pingpongCheckbox"
 					verticalCenter="0" />
 		<s:NumericStepper id="fpsInput"
 						  x="10"
 						  width="52"
-						  height="20"
 						  verticalCenter="0"
 						  change="fpsInput_change(event)"
 						  value="{_model.fps}"
 						  minimum="1"
 						  maximum="100"
-						  textAlign="right" />
+						  textAlign="right"
+						  borderVisible.Initial="true"
+						  borderColor.Initial="#333333"
+						  height.About="20" />
 		<s:Label x="67" text="fps" verticalCenter="0" />
 		<mx:Button id="playButton"
 				   toggle="true"
@@ -398,16 +412,14 @@
 					   styleName="Tools"
 					   enabled="{_hasContent}">
 		<s:HSlider id="zoomSlider"
-				   right="69"
+				   right="74"
 				   verticalCenter="0"
 				   change="zoomSlider_change(event)"
 				   maximum="{_maxScale}"
 				   minimum="{_minScale}"
 				   value="{_scale}"
 				   showDataTip="false"
-				   stepSize="0.01"
-				   right.Initial="74"
-				   verticalCenter.Initial="0" />
+				   stepSize="0.01" />
 		<s:NumericStepper id="zoomInput"
 						  right="10"
 						  verticalCenter="0"
@@ -416,7 +428,8 @@
 						  value="{(zoomSlider.value*100)}"
 						  minimum="50"
 						  maximum="300"
-						  textAlign="right" />
+						  textAlign="right"
+						  borderColor.Initial="#333333" />
 		<s:Label x="10" text="Background" verticalCenter="0" />
 		<mx:ColorPicker id="backgroundColorPicker"
 						x="82"
@@ -451,18 +464,17 @@
 					   top="10"
 					   bottom="10"
 					   width="142"
-					   styleName="Tools"
-					   enabled="{_hasContent}">
+					   styleName="Tools">
 		<s:Panel left="0"
 				 right="0"
 				 top="0"
-				 height="117"
+				 height="124"
 				 backgroundColor="#444444"
 				 dropShadowVisible="false"
 				 styleName="Tools"
+				 enabled="{_hasContent}"
 				 title="Info"
-				 height.Initial="184"
-				 top.Initial="0"
+				 top.Initial="92"
 				 left.Initial="0"
 				 right.Initial="0">
 			<s:Label x="9" y="19" text="Rows" />
@@ -475,33 +487,9 @@
 							  value="{_model.rows}"
 							  minimum="1"
 							  maximum="1000"
-							  textAlign="right" />
-			<s:Label x="9"
-					 y="91"
-					 text="Start"
-					 includeIn="Initial" />
-			<s:Label x="9"
-					 y="121"
-					 text="End"
-					 includeIn="Initial" />
-			<s:NumericStepper id="startFrameInput"
-							  y="85"
-							  right="10"
-							  width="61"
-							  value="{_model.startFrame+1}"
-							  minimum="1"
-							  maximum="{_model.totalFrames}"
 							  textAlign="right"
-							  change="startFrameInput_change(event)" />
-			<s:NumericStepper id="endFrameInput"
-							  y="113"
-							  right="10"
-							  width="61"
-							  value="{_model.endFrame+1}"
-							  minimum="{_model.startFrame+1}"
-							  maximum="{_model.totalFrames}"
-							  textAlign="right"
-							  change="endFrameInput_change(event)" />
+							  borderVisible.Initial="true"
+							  borderColor.Initial="#333333" />
 			<s:NumericStepper id="colsInput"
 							  y="41"
 							  right="10"
@@ -510,7 +498,61 @@
 							  textAlign="right"
 							  minimum="1"
 							  maximum="1000"
-							  change="colsInput_change(event)" />
+							  change="colsInput_change(event)"
+							  borderColor.Initial="#333333"
+							  borderVisible.Initial="true" />
+		</s:Panel>
+		<s:Panel height="119"
+				 styleName="Tools"
+				 y="121"
+				 left="0"
+				 right="0"
+				 dropShadowVisible="false"
+				 enabled="{_hasContent}"
+				 title="Frames"
+				 y.Initial="215"
+				 left.Initial="0"
+				 right.Initial="0">
+			<s:Label x="9" y="20" text="Start" />
+			<s:Label x="9" y="50" text="End" />
+			<s:NumericStepper id="startFrameInput"
+							  y="14"
+							  width="61"
+							  value="{_model.startFrame+1}"
+							  minimum="1"
+							  maximum="{_model.totalFrames}"
+							  textAlign="right"
+							  change="startFrameInput_change(event)"
+							  right="10"
+							  x="67"
+							  borderVisible.Initial="true"
+							  borderColor.Initial="#333333" />
+			<s:NumericStepper id="endFrameInput"
+							  y="42"
+							  width="61"
+							  value="{_model.endFrame+1}"
+							  minimum="{_model.startFrame+1}"
+							  maximum="{_model.totalFrames}"
+							  textAlign="right"
+							  change="endFrameInput_change(event)"
+							  right="10"
+							  x="67"
+							  borderVisible.Initial="true"
+							  borderColor.Initial="#333333" />
+		</s:Panel>
+		<s:Panel includeIn="Initial"
+				 y="0"
+				 height="93"
+				 right="0"
+				 left="0"
+				 dropShadowVisible="false"
+				 styleName="Tools"
+				 title="File">
+			<s:Button label="Open"
+					  horizontalCenter="0"
+					  y="20"
+					  id="openButton"
+					  click="openButton_click(event)" />
 		</s:Panel>
 	</s:BorderContainer>
 
