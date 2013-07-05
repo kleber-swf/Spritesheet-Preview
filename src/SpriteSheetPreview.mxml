@@ -34,11 +34,6 @@
 			shadowColor: #323232;
 			dropShadowVisible:true;
 		}
-		
-		.Empty {
-			backgroundAlpha: 0;
-			borderVisible: false;
-		}
 	</fx:Style>
 
 	<fx:Script>
@@ -124,8 +119,8 @@
 				scale = (event.target as HSlider).value;
 			}
 			
-			private function zoomLabel_change(event:TextOperationEvent):void {
-				scale = valueChanged(event, 100) * 0.01;
+			private function zoomLabel_change(event:Event):void {
+				scale = valueChanged(event) * 0.01;
 			}
 			
 			private function contentContainer_click(event:MouseEvent):void {
@@ -182,14 +177,6 @@
 					case "stageContainer":
 						scale = _scale + (event.delta / WHEEL_PAGE_SIZE * zoomSlider.stepSize * 10);
 						break;
-					case "rowsInput":
-						_model.rows += event.delta / WHEEL_PAGE_SIZE;
-						break;
-					case "colsInput":
-						_model.cols += event.delta / WHEEL_PAGE_SIZE;
-						break;
-					case "fpsInput":
-						_model.fps += event.delta / WHEEL_PAGE_SIZE;
 				}
 			}
 			
@@ -216,16 +203,24 @@
 			
 			/* ===== [ANIMATION DATA CHANGING] ===== */
 			
-			private function rowsInput_change(event:TextOperationEvent):void {
-				_model.rows = valueChanged(event, 1);
+			private function rowsInput_change(event:Event):void {
+				_model.rows = valueChanged(event);
 			}
 			
-			private function colsInput_change(event:TextOperationEvent):void {
-				_model.cols = valueChanged(event, 1);
+			private function colsInput_change(event:Event):void {
+				_model.cols = valueChanged(event);
 			}
 			
-			private function fpsInput_change(event:TextOperationEvent):void {
-				_model.fps = valueChanged(event, 1);
+			private function startFrameInput_change(event:Event):void {
+				_model.startFrame = valueChanged(event);
+			}
+			
+			private function endFrameInput_change(event:Event):void {
+				_model.endFrame = valueChanged(event);
+			}
+			
+			private function fpsInput_change(event:Event):void {
+				_model.fps = valueChanged(event);
 			}
 			
 			private function loopCheckbox_changed(event:Event):void {
@@ -255,13 +250,11 @@
 				_buffer = new BitmapData(stageContainer.width / _scale, stageContainer.height / _scale, true, 0x000000);
 			}
 			
-			private function valueChanged(event:TextOperationEvent, defaultValue:int):int {
-				var input:TextInput = event.target as TextInput;
-				var n:Number = parseInt(input.text);
-				if (isNaN(n))
-					n = defaultValue;
-				input.text = n.toString();
-				return n;
+			private function valueChanged(event:Event):int {
+				var value:Number = (event.target as NumericStepper).value;
+				value = Math.max(1, isNaN(value) ? 1 : value);
+				(event.target as NumericStepper).value = value;
+				return value;
 			}
 			
 			private function togglePlay():void {
@@ -310,13 +303,13 @@
 					   enabled="{_hasContent}">
 
 		<s:CheckBox id="loopCheckbox"
-					x="72"
+					x="102"
 					verticalCenter="0"
 					label="Loop"
 					toolTip="L"
 					change="loopCheckbox_changed(event)"
 					selected="{_model.loop}" />
-		<s:CheckBox x="129"
+		<s:CheckBox x="159"
 					label="Ping Pong"
 					toolTip="P"
 					change="pingpongCheckbox_changed(event)"
@@ -324,22 +317,23 @@
 					includeIn="Initial"
 					id="pingpongCheckbox"
 					verticalCenter="0" />
-		<s:TextInput id="fpsInput"
-					 x="10"
-					 width="31"
-					 height="20"
-					 verticalCenter="0"
-					 change="fpsInput_change(event)"
-					 text="{_model.fps}"
-					 textAlign="right" />
-		<s:Label x="44" text="fps" verticalCenter="0" />
+		<s:NumericStepper id="fpsInput"
+						  x="10"
+						  width="52"
+						  height="20"
+						  verticalCenter="0"
+						  change="fpsInput_change(event)"
+						  value="{_model.fps}"
+						  minimum="1"
+						  maximum="100"
+						  textAlign="right" />
+		<s:Label x="67" text="fps" verticalCenter="0" />
 		<mx:Button id="playButton"
 				   toggle="true"
-				   x="231"
+				   x="254"
 				   verticalCenter="0"
 				   change="playButton_change(event)"
 				   selected="{_model.playing}"
-				   styleName="Empty"
 				   toolTip="Enter"
 				   upSkin="@Embed('../assets/images/play.png')"
 				   overSkin="@Embed('../assets/images/play-over.png')"
@@ -348,13 +342,13 @@
 				   selectedOverSkin="@Embed('../assets/images/pause-over.png')"
 				   selectedDownSkin="@Embed('../assets/images/pause-down.png')" />
 		<s:HSlider id="frameSlider"
-				   left="260"
+				   left="284"
 				   right="10"
 				   verticalCenter="0"
 				   change="frameSlider_change(event)"
 				   liveDragging="true"
-				   maximum="{_model.totalFrames-1}"
-				   minimum="0"
+				   minimum="{_model.startFrame}"
+				   maximum="{_model.endFrame}"
 				   stepSize="1"
 				   value="{_model.currentFrame}" />
 	</s:BorderContainer>
@@ -403,21 +397,25 @@
 					   styleName="Tools"
 					   enabled="{_hasContent}">
 		<s:HSlider id="zoomSlider"
-				   right="59"
+				   right="69"
 				   verticalCenter="0"
 				   change="zoomSlider_change(event)"
 				   maximum="{_maxScale}"
 				   minimum="{_minScale}"
 				   value="{_scale}"
 				   showDataTip="false"
-				   stepSize="0.01" />
-		<s:TextInput id="zoomLabel"
-					 right="9"
-					 verticalCenter="0"
-					 width="42"
-					 change="zoomLabel_change(event)"
-					 text="{(zoomSlider.value*100).toFixed(0)}%"
-					 textAlign="right" />
+				   stepSize="0.01"
+				   right.Initial="74"
+				   verticalCenter.Initial="0" />
+		<s:NumericStepper id="zoomInput"
+						  right="10"
+						  verticalCenter="0"
+						  width="52"
+						  change="zoomLabel_change(event)"
+						  value="{(zoomSlider.value*100)}"
+						  minimum="50"
+						  maximum="300"
+						  textAlign="right" />
 		<s:Label x="10" text="Background" verticalCenter="0" />
 		<mx:ColorPicker id="backgroundColorPicker"
 						x="82"
@@ -461,23 +459,57 @@
 				 backgroundColor="#444444"
 				 dropShadowVisible="false"
 				 styleName="Tools"
-				 title="Info">
+				 title="Info"
+				 height.Initial="184"
+				 top.Initial="0"
+				 left.Initial="0"
+				 right.Initial="0">
 			<s:Label x="9" y="19" text="Rows" />
 			<s:Label x="9" y="49" text="Cols" />
-			<s:TextInput id="rowsInput"
-						 y="13"
-						 right="10"
-						 width="41"
-						 change="rowsInput_change(event)"
-						 text="{_model.rows}"
-						 textAlign="right" />
-			<s:TextInput id="colsInput"
-						 y="43"
-						 right="10"
-						 width="41"
-						 change="colsInput_change(event)"
-						 text="{_model.cols}"
-						 textAlign="right" />
+			<s:NumericStepper id="rowsInput"
+							  y="13"
+							  right="10"
+							  width="61"
+							  change="rowsInput_change(event)"
+							  value="{_model.rows}"
+							  minimum="1"
+							  maximum="1000"
+							  textAlign="right" />
+			<s:Label x="9"
+					 y="91"
+					 text="Start"
+					 includeIn="Initial" />
+			<s:Label x="9"
+					 y="121"
+					 text="End"
+					 includeIn="Initial" />
+			<s:NumericStepper id="startFrameInput"
+							  y="85"
+							  right="10"
+							  width="61"
+							  value="{_model.startFrame}"
+							  minimum="0"
+							  maximum="{_model.totalFrames-1}"
+							  textAlign="right"
+							  change="startFrameInput_change(event)" />
+			<s:NumericStepper id="endFrameInput"
+							  y="113"
+							  right="10"
+							  width="61"
+							  value="{_model.endFrame}"
+							  minimum="{_model.startFrame}"
+							  maximum="{_model.totalFrames-1}"
+							  textAlign="right"
+							  change="endFrameInput_change(event)" />
+			<s:NumericStepper id="colsInput"
+							  y="41"
+							  right="10"
+							  width="61"
+							  value="{_model.cols}"
+							  textAlign="right"
+							  minimum="1"
+							  maximum="1000"
+							  change="colsInput_change(event)" />
 		</s:Panel>
 	</s:BorderContainer>
 

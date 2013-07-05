@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <update xmlns="http://ns.adobe.com/air/framework/update/description/1.0">
-<versionNumber>1.1.1</versionNumber>
+<versionNumber>1.2.0</versionNumber>
 <url>http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/SpriteSheetPreview.air</url>
-<description><![CDATA[
+<description><![CDATA[1.2.0:
+	* Start and end frame configurable (issue #8)
+
+1.1.2:
+	* Numeric Steppers on rows, cols, fps and zoom: easier to change
+
 1.1.1:
 	* keyboard shortcut fix
 
@@ -21,6 +26,6 @@
 		* general bug fixing
 
 1.0.0
-	Initial version
+	* Initial version
 ]]></description>
 </update>

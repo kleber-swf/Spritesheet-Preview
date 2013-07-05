@@ -53,9 +53,11 @@ package app {
 				_elapsed += delta;
 				if (_elapsed >= delay) {
 					_elapsed = 0;
-					var nextFrame:int = (_model.totalFrames + _model.currentFrame + _frameInc) % _model.totalFrames;
-					var isFirst:Boolean = nextFrame == 0;
-					var isLast:Boolean = nextFrame == _model.totalFrames - 1;
+					var totalFrames:int = _model.endFrame + 1 - _model.startFrame;
+					var currentFrame:int = _model.currentFrame - _model.startFrame;
+					var nextFrame:int = ((totalFrames + currentFrame + _frameInc) % totalFrames) + _model.startFrame;
+					var isFirst:Boolean = nextFrame == _model.startFrame;
+					var isLast:Boolean = nextFrame == _model.endFrame;
 					
 					if (isFirst && _model.pingpong) {
 						_frameInc = 1;
