@@ -4,6 +4,7 @@
 <url>http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/SpriteSheetPreview.air</url>
 <description><![CDATA[1.2.0:
 	* Start and end frame configurable (issue #8)
+	* Play shortcut changed to Ctrl+Enter due numeric steppers events
 
 1.1.2:
 	* Numeric Steppers on rows, cols, fps and zoom: easier to change
