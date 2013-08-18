@@ -15,6 +15,10 @@ package app {
 		private var _frameIndex:int;
 		private var _frameInc:int = 1;
 		
+		public function get hasData():Boolean {
+			return _data != null;
+		}
+		
 		public function set image(image:Bitmap):void {
 			_data = image.bitmapData;
 		}
@@ -27,12 +31,16 @@ package app {
 			return _frameHeight;
 		}
 		
+		public function get drawPosition():Point {
+			return _drawPosition;
+		}
+		
 		public function SpriteSheet(model:AnimationModel) {
 			_model = model;
 		}
 		
 		public function draw(data:BitmapData, delta:int, containerBounds:Rectangle):void {
-			if (_data == null)
+			if (!_data)
 				return;
 			_frameWidth = _data.width / _model.cols;
 			_frameHeight = _data.height / _model.rows;
@@ -40,11 +48,17 @@ package app {
 			_drawPosition.y = (containerBounds.bottom - _frameHeight) * 0.5;
 			_frameIndex = getNextFrameIndex(delta);
 			
-			var row:int = _frameIndex / _model.cols;
-			var col:int = _frameIndex % _model.cols;
+			getFrameAt(_frameIndex, data, _drawPosition);
+		}
+		
+		public function getFrameAt(index:int, data:BitmapData, drawPosition:Point):void {
+			if (!_data)
+				return;
+			var row:int = index / _model.cols;
+			var col:int = index % _model.cols;
 			data.copyPixels(_data,
-							new Rectangle(_frameWidth * col, _frameHeight * row, _frameWidth, _frameHeight),
-							_drawPosition, null, null, false);
+				new Rectangle(_frameWidth * col, _frameHeight * row, _frameWidth, _frameHeight),
+				drawPosition, null, null, false);
 		}
 		
 		private function getNextFrameIndex(delta:int):int {

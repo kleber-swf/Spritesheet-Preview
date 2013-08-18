@@ -54,7 +54,7 @@
 			
 			private var _resources:ResourceController;
 			
-			private var _spriteSheet:SpriteSheet;
+			public static var _spriteSheet:SpriteSheet;
 			private var _bitmapData:BitmapData;
 			private var _drawBitmap:Bitmap;
 			private var _buffer:BitmapData;
@@ -65,6 +65,7 @@
 			[Bindable] private var _maxScale:Number = 3;
 			[Bindable] private var _hasContent:Boolean;
 			[Bindable] private var _frames:ArrayList;
+			[Bindable] private var _showFrameBorder:Boolean;
 			
 			private var _lastTime:int = 0;
 			private var _lastDirectory:String;
@@ -152,7 +153,11 @@
 				
 				_bitmapData.lock();
 				_bitmapData.fillRect(_bitmapData.rect, 0x000000);
+				if (_showFrameBorder)
+					drawFrameBorder(_bitmapData);
 				_bitmapData.draw(_buffer, _matrix);
+				
+				
 				_bitmapData.unlock();
 			}
 			
@@ -263,12 +268,16 @@
 				togglePlay();
 			}
 			
+			private function frameBorderCheckBox_click(event:MouseEvent):void {
+				_showFrameBorder = frameBorderCheckBox.selected;
+			}
+			
 			private function frameSlider_change(event:Event):void {
 				_model.playing = false;
 				_model.currentFrame = (event.target as HSlider).value - 1;
 			}
 			
-			protected function frameList_change(event:IndexChangeEvent):void {
+			private function frameList_change(event:IndexChangeEvent):void {
 				_model.currentFrame = event.target.selectedItem;
 			}
 			
@@ -328,6 +337,14 @@
 			private function setupFrames():void {
 				_frames = new ArrayList(_model.frames);
 				frameList.selectedItem = _model.currentFrame;
+			}
+			
+			private function drawFrameBorder(buffer:BitmapData):void {
+				var s:Sprite = new Sprite();
+				s.graphics.clear();
+				s.graphics.lineStyle(1, 0xFFFFFF - backgroundColorPicker.selectedColor, 0.9);
+				s.graphics.drawRect(_spriteSheet.drawPosition.x * _scale -1, _spriteSheet.drawPosition.y * _scale -1, _spriteSheet.width * _scale + 2, _spriteSheet.height * _scale + 2);
+				buffer.draw(s);
 			}
 			
 		]]>
@@ -393,6 +410,9 @@
 						showTextField="true" verticalCenter="0"/>
 		<s:HSlider id="backgroundAlphaSlider" x="112" width="60" maximum="1" minimum="0"
 				   showDataTip="false" stepSize="0.01" value="1" verticalCenter="0"/>
+		<s:CheckBox id="frameBorderCheckBox" includeIn="Initial" left="194" label="Show frame border"
+					click="frameBorderCheckBox_click(event)" selected="{_showFrameBorder}"
+					verticalCenter="0"/>
 	</s:BorderContainer>
 	<s:BorderContainer y="10" right="10" width="69" height="31" styleName="Tools"
 					   y.Initial="10" right.Initial="10">
@@ -461,6 +481,7 @@
 					   styleName="Tools">
 		<s:List id="frameList" left="10" right="10" top="10" bottom="10"
 				change="frameList_change(event)" dataProvider="{_frames}"
-				selectedItem="{_model.currentFrame}"></s:List>
+				itemRenderer="FrameListItemRenderer" selectedItem="{_model.currentFrame}">
+		</s:List>
 	</s:BorderContainer>
 </s:WindowedApplication>

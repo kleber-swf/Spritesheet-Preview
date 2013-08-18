@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx" 
+				autoDrawBackground="true">
+	<fx:Script>
+		<![CDATA[
+			import app.SpriteSheet;
+			public override function set data(value:Object):void {
+				var d:BitmapData;
+				var ss:SpriteSheet = SpriteSheetPreview._spriteSheet;
+				if (ss.hasData) {
+					d = new BitmapData(ss.width, ss.height, true, 0x000000);
+					ss.getFrameAt(int(value), d, new Point());
+				} else {
+					d = new BitmapData(100, 100, true, 0x000000);
+				}
+				image.source = d;
+			}
+		]]>
+	</fx:Script>
+	<s:BitmapImage width="100" height="100" id="image"/>
+	
+</s:ItemRenderer>
