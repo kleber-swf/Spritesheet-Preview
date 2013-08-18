@@ -9,6 +9,7 @@ package app {
 		private var _totalFrames:int = 0;
 		private var _startFrame:int = 0;
 		private var _endFrame:int = 0;
+		private var _frames:Array;
 		
 		public var loop:Boolean = true;
 		public var pingpong:Boolean = false;
@@ -25,6 +26,13 @@ package app {
 			_startFrame = value;
 			if (currentFrame < _startFrame)
 				currentFrame = _startFrame;
+			createFrameList();
+		}
+		
+		private function createFrameList():void {
+			_frames = new Array();
+			for (var i:int = startFrame; i <= endFrame; i++)
+				_frames.push(i);
 		}
 		
 		public function get endFrame():int {
@@ -37,6 +45,7 @@ package app {
 			_endFrame = value;
 			if (currentFrame > _endFrame)
 				currentFrame = _endFrame;
+			createFrameList();
 		}
 		
 		public function get totalFrames():int {
@@ -46,6 +55,7 @@ package app {
 		public function set totalFrames(value:int):void {
 			_totalFrames = value;
 			endFrame = totalFrames - 1;
+			createFrameList();
 		}
 		
 		public function get fps():int {
@@ -72,6 +82,10 @@ package app {
 		public function set cols(value:int):void {
 			_cols = value > 1 ? value : 1;
 			totalFrames = _rows * _cols;
+		}
+		
+		public function get frames():Array {
+			return _frames;
 		}
 	}
 }

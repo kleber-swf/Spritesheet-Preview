@@ -3,24 +3,19 @@
 					   xmlns:s="library://ns.adobe.com/flex/spark"
 					   xmlns:mx="library://ns.adobe.com/flex/mx"
 					   xmlns:provider="com.pblabs.engine.resource.provider.*"
-					   width="780"
-					   height="520"
-					   minWidth="780"
-					   minHeight="520"
-					   backgroundColor="#5A5E67"
-					   currentState="Initial"
-					   frameRate="60"
-					   showStatusBar="false"
-					   title="SpriteSheet Preview"
-					   invoke="application_invoke(event)"
+					   width="780" height="520" minWidth="780" minHeight="520"
 					   applicationComplete="application_applicationComplete(event)"
-					   creationComplete="application_creationComplete(event)"
-					   enterFrame="application_enterFrame(event)"
+					   backgroundColor="#5A5E67"
+					   creationComplete="application_creationComplete(event)" currentState="Initial"
+					   enterFrame="application_enterFrame(event)" frameRate="60"
+					   invoke="application_invoke(event)" showStatusBar="false"
+					   title="SpriteSheet Preview"
+					   width.Initial="972"
 					   nativeDragDrop.Initial="application_nativeDragDrop(event)"
 					   nativeDragEnter.Initial="application_nativeDragEnter(event)">
 	<s:states>
-		<s:State name="Initial" />
-		<s:State name="About" />
+		<s:State name="Initial"/>
+		<s:State name="About"/>
 	</s:states>
 
 	<fx:Style>
@@ -43,11 +38,14 @@
 			import app.SpriteSheet;
 			import app.UpdateController;
 			
+			import mx.collections.ArrayList;
 			import mx.controls.Alert;
 			import mx.core.IUIComponent;
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
 			import mx.managers.DragManager;
+			
+			import spark.events.IndexChangeEvent;
 			
 			private static const WHEEL_PAGE_SIZE:int = 3;
 			
@@ -66,6 +64,7 @@
 			[Bindable] private var _minScale:Number = 0.5;
 			[Bindable] private var _maxScale:Number = 3;
 			[Bindable] private var _hasContent:Boolean;
+			[Bindable] private var _frames:ArrayList;
 			
 			private var _lastTime:int = 0;
 			private var _lastDirectory:String;
@@ -97,9 +96,21 @@
 			
 			private function application_invoke(event:InvokeEvent):void {
 				// Check initial parameters
-				if (event.arguments == null || event.arguments.length <= 0)
+				var arguments:Array = event.arguments;
+				if (arguments == null || arguments.length <= 0)
 					return;
-				_resources.imageURL = event.arguments[0];
+				_resources.imageURL = arguments[0];
+				if (arguments.length > 0) {
+					var n:Number = parseInt(arguments[1]);
+					if (!isNaN(n))
+						_model.rows = n;
+					if (arguments.length > 1) {
+						n = parseInt(arguments[2]);
+						if (!isNaN(n))
+							_model.cols = n;
+					}
+					setupFrames();
+				}
 			}
 			
 			
@@ -218,18 +229,22 @@
 			
 			private function rowsInput_change(event:Event):void {
 				_model.rows = valueChanged(event);
+				setupFrames();
 			}
 			
 			private function colsInput_change(event:Event):void {
 				_model.cols = valueChanged(event);
+				setupFrames();
 			}
 			
 			private function startFrameInput_change(event:Event):void {
-				_model.startFrame = valueChanged(event, event.target.value - 1);
+				_model.startFrame = event.target.value -1;
+				setupFrames();
 			}
 			
 			private function endFrameInput_change(event:Event):void {
 				_model.endFrame = valueChanged(event, event.target.value - 1);
+				setupFrames();
 			}
 			
 			private function fpsInput_change(event:Event):void {
@@ -251,6 +266,10 @@
 			private function frameSlider_change(event:Event):void {
 				_model.playing = false;
 				_model.currentFrame = (event.target as HSlider).value - 1;
+			}
+			
+			protected function frameList_change(event:IndexChangeEvent):void {
+				_model.currentFrame = event.target.selectedItem;
 			}
 			
 			
@@ -305,306 +324,143 @@
 				_spriteSheet.image = image;
 				_hasContent = true;
 			}
+			
+			private function setupFrames():void {
+				_frames = new ArrayList(_model.frames);
+				frameList.selectedItem = _model.currentFrame;
+			}
+			
 		]]>
 	</fx:Script>
-	<s:BorderContainer id="topBar"
-					   left="160"
-					   right="87"
-					   top="10"
-					   height="32"
+	<s:BorderContainer id="topBar" left="160" right="87" top="10" height="32" enabled="{_hasContent}"
 					   styleName="Tools"
-					   enabled="{_hasContent}">
+					   left.Initial="160" right.Initial="86" top.Initial="10">
 
-		<s:CheckBox id="loopCheckbox"
-					x="102"
-					verticalCenter="0"
-					label="Loop"
-					toolTip="L"
-					change="loopCheckbox_changed(event)"
-					selected="{_model.loop}" />
-		<s:CheckBox x="159"
-					label="Ping Pong"
-					toolTip="P"
-					change="pingpongCheckbox_changed(event)"
-					selected="{_model.pingpong}"
-					id="pingpongCheckbox"
-					verticalCenter="0" />
-		<s:NumericStepper id="fpsInput"
-						  x="10"
-						  width="52"
+		<s:CheckBox id="loopCheckbox" x="102" label="Loop" change="loopCheckbox_changed(event)"
+					selected="{_model.loop}" toolTip="L" verticalCenter="0"/>
+		<s:CheckBox id="pingpongCheckbox" x="159" label="Ping Pong"
+					change="pingpongCheckbox_changed(event)" selected="{_model.pingpong}"
+					toolTip="P" verticalCenter="0"/>
+		<s:NumericStepper id="fpsInput" x="10" width="52" change="fpsInput_change(event)"
+						  maximum="100" minimum="1" textAlign="right" value="{_model.fps}"
 						  verticalCenter="0"
-						  change="fpsInput_change(event)"
-						  value="{_model.fps}"
-						  minimum="1"
-						  maximum="100"
-						  textAlign="right"
-						  borderVisible.Initial="true"
-						  borderColor.Initial="#333333"
-						  height.About="20" />
-		<s:Label x="67" text="fps" verticalCenter="0" />
-		<mx:Button id="playButton"
-				   toggle="true"
-				   x="254"
-				   verticalCenter="0"
-				   change="playButton_change(event)"
-				   selected="{_model.playing}"
-				   toolTip="Ctrl + Enter"
-				   upSkin="@Embed('../assets/images/play.png')"
-				   overSkin="@Embed('../assets/images/play-over.png')"
+						  height.About="20"
+						  borderColor.Initial="#333333" borderVisible.Initial="true"/>
+		<s:Label x="67" text="fps" verticalCenter="0"/>
+		<mx:Button id="playButton" x="254" change="playButton_change(event)"
 				   downSkin="@Embed('../assets/images/play-down.png')"
-				   selectedUpSkin="@Embed('../assets/images/pause.png')"
+				   overSkin="@Embed('../assets/images/play-over.png')" selected="{_model.playing}"
+				   selectedDownSkin="@Embed('../assets/images/pause-down.png')"
 				   selectedOverSkin="@Embed('../assets/images/pause-over.png')"
-				   selectedDownSkin="@Embed('../assets/images/pause-down.png')" />
-		<s:HSlider id="frameSlider"
-				   left="284"
-				   right="10"
+				   selectedUpSkin="@Embed('../assets/images/pause.png')" toggle="true"
+				   toolTip="Ctrl + Enter" upSkin="@Embed('../assets/images/play.png')"
 				   verticalCenter="0"
-				   change="frameSlider_change(event)"
-				   liveDragging="true"
-				   minimum="{_model.startFrame+1}"
-				   maximum="{_model.endFrame+1}"
-				   stepSize="1"
-				   dataTipPrecision="0"
-				   value="{_model.currentFrame+1}" />
+				   x.Initial="355" verticalCenter.Initial="0"/>
+		<s:HSlider id="frameSlider" left="284" right="10" change="frameSlider_change(event)"
+				   dataTipPrecision="0" liveDragging="true" maximum="{_model.endFrame+1}"
+				   minimum="{_model.startFrame+1}" stepSize="1" value="{_model.currentFrame+1}"
+				   verticalCenter="0"
+				   left.Initial="381" right.Initial="10" verticalCenter.Initial="0"/>
 	</s:BorderContainer>
-	<s:BorderContainer id="contentContainer"
-					   left="160"
-					   right="10"
-					   top="50"
-					   bottom="50"
-					   borderVisible="false"
+	<s:BorderContainer id="contentContainer" left="160" right="10" top="50" bottom="50"
+					   borderVisible="false" click="contentContainer_click(event)"
 					   dropShadowVisible="false"
-					   click="contentContainer_click(event)">
-		<s:BitmapImage id="transparentBackground"
-					   left="0"
-					   right="0"
-					   top="0"
-					   bottom="0"
-					   fillMode="repeat"
-					   source="@Embed('../assets/images/transparency.png')" />
-		<s:BorderContainer id="background"
-						   left="0"
-						   right="0"
-						   top="0"
-						   bottom="0"
+					   left.Initial="160" right.Initial="193" top.Initial="50" bottom.Initial="50">
+		<s:BitmapImage id="transparentBackground" left="0" right="0" top="0" bottom="0"
+					   fillMode="repeat" source="@Embed('../assets/images/transparency.png')"/>
+		<s:BorderContainer id="background" left="0" right="0" top="0" bottom="0"
 						   backgroundAlpha="{backgroundAlphaSlider.value}"
 						   backgroundColor="{backgroundColorPicker.selectedColor}"
-						   borderVisible="false"
-						   dropShadowVisible="false" />
-		<s:BitmapImage id="dragAndDropImage"
-					   horizontalCenter="0"
-					   verticalCenter="0"
-					   visible="{!_hasContent}"
-					   source="@Embed('../assets/images/drag-n-drop.png')" />
-		<mx:UIComponent id="stageContainer"
-						left="0"
-						right="0"
-						top="0"
-						bottom="0"
-						resize="stageContainer_resize(event)" />
+						   borderVisible="false" dropShadowVisible="false"/>
+		<s:BitmapImage id="dragAndDropImage" visible="{!_hasContent}" horizontalCenter="0"
+					   source="@Embed('../assets/images/drag-n-drop.png')" verticalCenter="0"/>
+		<mx:UIComponent id="stageContainer" left="0" right="0" top="0" bottom="0"
+						resize="stageContainer_resize(event)"/>
 	</s:BorderContainer>
 
-	<s:BorderContainer id="bottomBar"
-					   left="160"
-					   right="10"
-					   bottom="10"
-					   height="32"
-					   styleName="Tools"
-					   enabled="{_hasContent}">
-		<s:HSlider id="zoomSlider"
-				   right="74"
-				   verticalCenter="0"
-				   change="zoomSlider_change(event)"
-				   maximum="{_maxScale}"
-				   minimum="{_minScale}"
-				   value="{_scale}"
-				   showDataTip="false"
-				   stepSize="0.01" />
-		<s:NumericStepper id="zoomInput"
-						  right="10"
-						  verticalCenter="0"
-						  width="52"
-						  change="zoomLabel_change(event)"
-						  value="{(zoomSlider.value*100)}"
-						  minimum="50"
-						  maximum="300"
-						  textAlign="right"
-						  borderColor.Initial="#333333" />
-		<s:Label x="10" text="Background" verticalCenter="0" />
-		<mx:ColorPicker id="backgroundColorPicker"
-						x="82"
-						verticalCenter="0"
-						selectedColor="#5A5E67"
-						showTextField="true" />
-		<s:HSlider id="backgroundAlphaSlider"
-				   x="112"
-				   verticalCenter="0"
-				   width="60"
-				   maximum="1"
-				   minimum="0"
-				   showDataTip="false"
-				   stepSize="0.01"
-				   value="1" />
+	<s:BorderContainer id="bottomBar" left="160" right="10" bottom="10" height="32"
+					   enabled="{_hasContent}" styleName="Tools"
+					   left.Initial="160" right.Initial="10" bottom.Initial="10">
+		<s:HSlider id="zoomSlider" right="74" change="zoomSlider_change(event)" maximum="{_maxScale}"
+				   minimum="{_minScale}" showDataTip="false" stepSize="0.01" value="{_scale}"
+				   verticalCenter="0"/>
+		<s:NumericStepper id="zoomInput" right="10" width="52" change="zoomLabel_change(event)"
+						  maximum="300" minimum="50" textAlign="right"
+						  value="{(zoomSlider.value*100)}" verticalCenter="0"
+						  borderColor.Initial="#333333"/>
+		<s:Label x="10" text="Background" verticalCenter="0"/>
+		<mx:ColorPicker id="backgroundColorPicker" x="82" selectedColor="#5A5E67"
+						showTextField="true" verticalCenter="0"/>
+		<s:HSlider id="backgroundAlphaSlider" x="112" width="60" maximum="1" minimum="0"
+				   showDataTip="false" stepSize="0.01" value="1" verticalCenter="0"/>
 	</s:BorderContainer>
-	<s:BorderContainer y="10"
-					   right="10"
-					   width="69"
-					   height="31"
-					   styleName="Tools">
-		<s:Button id="aboutButton"
-				  x="6"
-				  width="55"
-				  height="18"
+	<s:BorderContainer y="10" right="10" width="69" height="31" styleName="Tools"
+					   y.Initial="10" right.Initial="10">
+		<s:Button id="aboutButton" x="6" width="55" height="18" label="About" fontSize="10"
 				  verticalCenter="0"
-				  label="About"
-				  fontSize="10"
-				  click.Initial="currentState = 'About'" />
+				  click.Initial="currentState = 'About'"/>
 	</s:BorderContainer>
-	<s:BorderContainer left="10"
-					   top="10"
-					   bottom="10"
-					   width="142"
-					   styleName="Tools">
-		<s:Panel left="0"
-				 right="0"
-				 top="0"
-				 height="124"
-				 backgroundColor="#444444"
-				 dropShadowVisible="false"
-				 styleName="Tools"
-				 enabled="{_hasContent}"
-				 title="Info"
-				 top.Initial="92"
-				 left.Initial="0"
-				 right.Initial="0">
-			<s:Label x="9" y="19" text="Rows" />
-			<s:Label x="9" y="49" text="Cols" />
-			<s:NumericStepper id="rowsInput"
-							  y="13"
-							  right="10"
-							  width="61"
-							  change="rowsInput_change(event)"
-							  value="{_model.rows}"
-							  minimum="1"
-							  maximum="1000"
-							  textAlign="right"
-							  borderVisible.Initial="true"
-							  borderColor.Initial="#333333" />
-			<s:NumericStepper id="colsInput"
-							  y="41"
-							  right="10"
-							  width="61"
-							  value="{_model.cols}"
-							  textAlign="right"
-							  minimum="1"
-							  maximum="1000"
-							  change="colsInput_change(event)"
-							  borderColor.Initial="#333333"
-							  borderVisible.Initial="true" />
+	<s:BorderContainer left="10" top="10" bottom="10" width="142" styleName="Tools">
+		<s:Panel left="0" right="0" top="0" height="124" backgroundColor="#444444"
+				 dropShadowVisible="false" enabled="{_hasContent}" styleName="Tools" title="Info"
+				 left.Initial="0" right.Initial="0" top.Initial="92">
+			<s:Label x="9" y="19" text="Rows"/>
+			<s:Label x="9" y="49" text="Cols"/>
+			<s:NumericStepper id="rowsInput" y="13" right="10" width="61"
+							  change="rowsInput_change(event)" maximum="1000" minimum="1"
+							  textAlign="right" value="{_model.rows}"
+							  borderColor.Initial="#333333" borderVisible.Initial="true"/>
+			<s:NumericStepper id="colsInput" y="41" right="10" width="61"
+							  change="colsInput_change(event)" maximum="1000" minimum="1"
+							  textAlign="right" value="{_model.cols}"
+							  borderColor.Initial="#333333" borderVisible.Initial="true"/>
 		</s:Panel>
-		<s:Panel height="119"
-				 styleName="Tools"
-				 y="121"
-				 left="0"
-				 right="0"
-				 dropShadowVisible="false"
-				 enabled="{_hasContent}"
-				 title="Frames"
-				 y.Initial="215"
-				 left.Initial="0"
-				 right.Initial="0">
-			<s:Label x="9" y="20" text="Start" />
-			<s:Label x="9" y="50" text="End" />
-			<s:NumericStepper id="startFrameInput"
-							  y="14"
-							  width="61"
-							  value="{_model.startFrame+1}"
-							  minimum="1"
-							  maximum="{_model.totalFrames}"
-							  textAlign="right"
-							  change="startFrameInput_change(event)"
-							  right="10"
-							  x="67"
-							  borderVisible.Initial="true"
-							  borderColor.Initial="#333333" />
-			<s:NumericStepper id="endFrameInput"
-							  y="42"
-							  width="61"
+		<s:Panel y="121" left="0" right="0" height="119" dropShadowVisible="false"
+				 enabled="{_hasContent}" styleName="Tools" title="Frames"
+				 y.Initial="215" left.Initial="0" right.Initial="0">
+			<s:Label x="9" y="20" text="Start"/>
+			<s:Label x="9" y="50" text="End"/>
+			<s:NumericStepper id="startFrameInput" x="67" y="14" right="10" width="61"
+							  change="startFrameInput_change(event)" maximum="{_model.totalFrames}"
+							  minimum="1" textAlign="right" value="{_model.startFrame+1}"
+							  borderColor.Initial="#333333" borderVisible.Initial="true"/>
+			<s:NumericStepper id="endFrameInput" x="67" y="42" right="10" width="61"
+							  change="endFrameInput_change(event)" maximum="{_model.totalFrames}"
+							  minimum="{_model.startFrame+1}" textAlign="right"
 							  value="{_model.endFrame+1}"
-							  minimum="{_model.startFrame+1}"
-							  maximum="{_model.totalFrames}"
-							  textAlign="right"
-							  change="endFrameInput_change(event)"
-							  right="10"
-							  x="67"
-							  borderVisible.Initial="true"
-							  borderColor.Initial="#333333" />
+							  borderColor.Initial="#333333" borderVisible.Initial="true"/>
 		</s:Panel>
-		<s:Panel includeIn="Initial"
-				 y="0"
-				 height="93"
-				 right="0"
-				 left="0"
-				 dropShadowVisible="false"
-				 styleName="Tools"
-				 title="File">
-			<s:Button label="Open"
-					  horizontalCenter="0"
-					  y="20"
-					  id="openButton"
-					  click="openButton_click(event)" />
+		<s:Panel includeIn="Initial" y="0" left="0" right="0" height="93" dropShadowVisible="false"
+				 styleName="Tools" title="File">
+			<s:Button id="openButton" y="20" label="Open" click="openButton_click(event)"
+					  horizontalCenter="0"/>
 		</s:Panel>
 	</s:BorderContainer>
 
-	<s:BorderContainer includeIn="About"
-					   left="0"
-					   right="0"
-					   top="0"
-					   bottom="0"
-					   backgroundAlpha="0.81"
+	<s:BorderContainer includeIn="About" left="0" right="0" top="0" bottom="0" backgroundAlpha="0.81"
 					   backgroundColor="#434343"
 					   click.About="currentState = 'Initial'">
-		<s:BorderContainer width="344"
-						   height="193"
-						   backgroundColor="#666666"
-						   horizontalCenter="-4"
-						   styleName="Tools"
-						   verticalCenter="0">
-			<s:Label y="15"
-					 color="#F3F3F3"
-					 fontFamily="Arial"
-					 fontSize="20"
-					 fontStyle="italic"
-					 fontWeight="bold"
-					 horizontalCenter="7"
-					 text="SpriteSheet Preview" />
-			<mx:HRule y="39"
-					  width="264"
-					  height="4"
-					  horizontalCenter="18" />
-			<s:Label y="55"
-					 width="300"
-					 color="#F3F3F3"
-					 horizontalCenter="0"
+		<s:BorderContainer width="344" height="193" backgroundColor="#666666" horizontalCenter="-4"
+						   styleName="Tools" verticalCenter="0">
+			<s:Label y="15" color="#F3F3F3" fontFamily="Arial" fontSize="20" fontStyle="italic"
+					 fontWeight="bold" horizontalCenter="7" text="SpriteSheet Preview"/>
+			<mx:HRule y="39" width="264" height="4" horizontalCenter="18"/>
+			<s:Label y="55" width="300" color="#F3F3F3" horizontalCenter="0"
 					 text="A simple program to preview sprite sheets.&#xd;Just drag your spritesheet into the indicated area and set rows and cols. Hit play e see the preview."
-					 textAlign="center" />
-			<s:Label bottom="33"
-					 color="#F3F3F3"
-					 horizontalCenter="0"
-					 text="Kleber Lopes da Silva" />
-			<mx:LinkButton bottom="12"
-						   label="http://kleber-swf.blogspot.com"
+					 textAlign="center"/>
+			<s:Label bottom="33" color="#F3F3F3" horizontalCenter="0" text="Kleber Lopes da Silva"/>
+			<mx:LinkButton bottom="12" label="http://kleber-swf.blogspot.com"
 						   click="navigateToURL(new URLRequest('http://kleber-swf.blogspot.com'))"
-						   color="#9AAEC4"
-						   horizontalCenter="0" />
-			<s:Image x="11" y="12" source="@Embed('assets/icons/icon-36.png')" />
-			<s:Label id="versionLabel"
-					 y="109"
-					 width="165"
-					 color="#F3F3F3"
-					 horizontalCenter="0"
-					 text="Version {_updater.version}"
-					 textAlign="center" />
+						   color="#9AAEC4" horizontalCenter="0"/>
+			<s:Image x="11" y="12" source="@Embed('assets/icons/icon-36.png')"/>
+			<s:Label id="versionLabel" y="109" width="165" color="#F3F3F3" horizontalCenter="0"
+					 text="Version {_updater.version}" textAlign="center"/>
 		</s:BorderContainer>
+	</s:BorderContainer>
+	<s:BorderContainer includeIn="Initial" right="10" top="50" bottom="50" width="175"
+					   styleName="Tools">
+		<s:List id="frameList" left="10" right="10" top="10" bottom="10"
+				change="frameList_change(event)" dataProvider="{_frames}"
+				selectedItem="{_model.currentFrame}"></s:List>
 	</s:BorderContainer>
 </s:WindowedApplication>
