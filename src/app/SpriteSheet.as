@@ -21,6 +21,8 @@ package app {
 		
 		public function set image(image:Bitmap):void {
 			_data = image.bitmapData;
+			_frameWidth = _data.width / _model.cols;
+			_frameHeight = _data.height / _model.rows;
 		}
 		
 		public function get width():int {
@@ -48,12 +50,18 @@ package app {
 			_drawPosition.y = (containerBounds.bottom - _frameHeight) * 0.5;
 			_frameIndex = getNextFrameIndex(delta);
 			
-			getFrameAt(_frameIndex, data, _drawPosition);
+			var row:int = _frameIndex / _model.cols;
+			var col:int = _frameIndex % _model.cols;
+			data.copyPixels(_data,
+				new Rectangle(_frameWidth * col, _frameHeight * row, _frameWidth, _frameHeight),
+				drawPosition, null, null, false);
 		}
 		
 		public function getFrameAt(index:int, data:BitmapData, drawPosition:Point):void {
 			if (!_data)
 				return;
+			var _frameWidth:Number = _data.width / _model.cols;
+			var _frameHeight:Number = _data.height / _model.rows;
 			var row:int = index / _model.cols;
 			var col:int = index % _model.cols;
 			data.copyPixels(_data,

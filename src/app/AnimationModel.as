@@ -29,7 +29,9 @@ package app {
 			createFrameList();
 		}
 		
-		private function createFrameList():void {
+		public function createFrameList():void {
+			if (_frames && _frames.length == _totalFrames && _frames[0] == _startFrame)
+				return;
 			_frames = new Array();
 			for (var i:int = startFrame; i <= endFrame; i++)
 				_frames.push(i);

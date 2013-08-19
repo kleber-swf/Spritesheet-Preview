@@ -6,19 +6,54 @@
 	<fx:Script>
 		<![CDATA[
 			import app.SpriteSheet;
+			
+			private static var _drawPosition:Point = new Point();
+			
 			public override function set data(value:Object):void {
-				var d:BitmapData;
-				var ss:SpriteSheet = SpriteSheetPreview._spriteSheet;
-				if (ss.hasData) {
-					d = new BitmapData(ss.width, ss.height, true, 0x000000);
-					ss.getFrameAt(int(value), d, new Point());
+				super.data = value;
+				
+				var _spriteSheet:SpriteSheet = SpriteSheetPreview._spriteSheet;
+				var _bitmapData:BitmapData;
+				if (_spriteSheet.hasData) {
+					var bufferWidth:int = _spriteSheet.width;
+					var bufferHeight:int = _spriteSheet.height;
+					var scale:Number;
+					if (bufferWidth > bufferHeight) {
+						scale = 160/bufferWidth;
+//						_drawPosition.x = 0;
+//						_drawPosition.y = ((100 / scale) - bufferHeight)*0.5;
+					} else {
+						scale = 100/bufferHeight;
+//						_drawPosition.x = ((160 / scale) - bufferWidth)*0.5;
+//						_drawPosition.y = 0;
+					}
+					
+					var _matrix:Matrix = new Matrix();
+					_matrix.scale(scale, scale);
+//					_matrix.translate((bufferWidth*scale-160)*0.5, (bufferHeight*scale-100)*0.5);
+					
+//					_drawPosition.x = (160/scale - bufferWidth) * 0.5;
+//					_drawPosition.y = (100/scale - bufferHeight) * 0.5;
+					
+//					_drawPosition.x = (bufferWidth-160) * 0.5;
+//					_drawPosition.y = (bufferHeight-100) * 0.5;
+					
+					var _buffer:BitmapData = new BitmapData(bufferWidth, bufferHeight, true, 0x000000);
+					_buffer.lock();
+					_spriteSheet.getFrameAt(int(data), _buffer, _drawPosition);
+					_buffer.unlock();
+					
+					_bitmapData = new BitmapData(160, 100, true, 0x000000);
+					_bitmapData.lock();
+					_bitmapData.draw(_buffer, _matrix);
+					_bitmapData.unlock();
 				} else {
-					d = new BitmapData(100, 100, true, 0x000000);
+					_bitmapData = new BitmapData(160, 100, true, 0x000000);
 				}
-				image.source = d;
+				image.source = _bitmapData;
 			}
 		]]>
 	</fx:Script>
-	<s:BitmapImage width="100" height="100" id="image"/>
+	<s:BitmapImage id="image" width="{160}" height="{100}"/>
 	
 </s:ItemRenderer>

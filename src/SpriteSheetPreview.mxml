@@ -59,7 +59,7 @@
 			[Bindable] private var _minScale:Number = 0.5;
 			[Bindable] private var _maxScale:Number = 3;
 			[Bindable] private var _hasContent:Boolean;
-			[Bindable] private var _frames:ArrayList;
+			[Bindable] private var _frames:ArrayCollection;
 			[Bindable] private var _showFrameBorder:Boolean;
 			
 			private var _lastTime:int = 0;
@@ -151,8 +151,6 @@
 				if (_showFrameBorder)
 					drawFrameBorder(_bitmapData);
 				_bitmapData.draw(_buffer, _matrix);
-				
-				
 				_bitmapData.unlock();
 			}
 			
@@ -327,10 +325,14 @@
 			private function onImageLoadSuccess(image:Bitmap):void {
 				_spriteSheet.image = image;
 				_hasContent = true;
+				_model.createFrameList();
+				setupFrames();
+//				frameList.dataGroup.invalidateDisplayList();
+//				(frameList.dataProvider as ArrayCollection).refresh();
 			}
 			
 			private function setupFrames():void {
-				_frames = new ArrayList(_model.frames);
+				_frames = new ArrayCollection(_model.frames);
 				frameList.selectedItem = _model.currentFrame;
 			}
 			
@@ -376,7 +378,7 @@
 				   minimum="{_model.startFrame+1}" stepSize="1" value="{_model.currentFrame+1}"
 				   verticalCenter="0"/>
 	</s:BorderContainer>
-	<s:BorderContainer id="contentContainer" left="160" right="193" top="50" bottom="50"
+	<s:BorderContainer id="contentContainer" left="160" right="207" top="50" bottom="50"
 					   borderVisible="false" click="contentContainer_click(event)"
 					   dropShadowVisible="false">
 		<s:BitmapImage id="transparentBackground" left="0" right="0" top="0" bottom="0"
@@ -444,7 +446,7 @@
 					  horizontalCenter="0"/>
 		</s:Panel>
 	</s:BorderContainer>
-	<s:BorderContainer right="10" top="50" bottom="50" width="175" styleName="Tools">
+	<s:BorderContainer right="10" top="50" bottom="50" width="189" styleName="Tools">
 		<s:List id="frameList" left="0" right="0" top="0" bottom="0" borderVisible="false"
 				change="frameList_change(event)" contentBackgroundAlpha="0.0"
 				dataProvider="{_frames}" itemRenderer="FrameListItemRenderer"
