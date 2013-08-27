@@ -23,6 +23,7 @@
 			protected function okButton_click(event:MouseEvent):void {
 				Settings.set(Settings.OPTION_SAVE_WINDOW_STATE, rememberWindowStateCheckBox.selected);
 				Settings.set(Settings.OPTION_SAVE_LAST_FILE, rememberFileCheckBox.selected);
+				Settings.set(Settings.OPTION_CHECK_FOR_UPDATES, checkForUpdatesCheckBox.selected);
 				PopUpManager.removePopUp(this);
 			}
 			
@@ -35,5 +36,5 @@
 	<s:Button id="okButton" right="94" bottom="16" label="Ok" click="okButton_click(event)" />
 	<s:CheckBox id="rememberWindowStateCheckBox" y="25" left="38" label="Remember window state" />
 	<s:CheckBox id="rememberFileCheckBox" y="51" left="38" label="Remember last opened file" />
-	<s:CheckBox id="checkForUpdatesCheckBox" y="76" left="38" label="Check for updates on start" />
+	<s:CheckBox id="checkForUpdatesCheckBox" y="77" left="38" label="Check for updates on start" />
 </s:TitleWindow>
