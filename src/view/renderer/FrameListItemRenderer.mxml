@@ -15,6 +15,7 @@
 				var _spriteSheet:SpriteSheet = SpriteSheetPreview._spriteSheet;
 				var _bitmapData:BitmapData;
 				if (_spriteSheet.hasData) {
+					_spriteSheet.updateFrameSize();
 					var bufferWidth:int = _spriteSheet.width;
 					var bufferHeight:int = _spriteSheet.height;
 					var scale:Number;
@@ -51,7 +52,7 @@
 					_bitmapData = new BitmapData(160, 100, true, 0x000000);
 				}
 				image.source = _bitmapData;
-			}
+			}			
 		]]>
 	</fx:Script>
 	<s:BitmapImage id="image" width="{160}" height="{100}"/>

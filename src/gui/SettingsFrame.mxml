@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" width="290" height="190" title="Settings">
+
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			import settings.Settings;
+			
+			public static function show(caller:DisplayObject):void {
+				var popup:SettingsFrame = PopUpManager.createPopUp(caller, SettingsFrame, true) as SettingsFrame;
+				popup.closeButton.visible = false;
+				popup.readOptions();
+				PopUpManager.centerPopUp(popup);
+			}
+			
+			public function readOptions():void {
+				rememberWindowStateCheckBox.selected = Settings.get(Settings.OPTION_SAVE_WINDOW_STATE, true);
+				rememberFileCheckBox.selected = Settings.get(Settings.OPTION_SAVE_LAST_FILE, false);
+				checkForUpdatesCheckBox.selected = Settings.get(Settings.OPTION_CHECK_FOR_UPDATES, true);
+			}
+			
+			protected function okButton_click(event:MouseEvent):void {
+				Settings.set(Settings.OPTION_SAVE_WINDOW_STATE, rememberWindowStateCheckBox.selected);
+				Settings.set(Settings.OPTION_SAVE_LAST_FILE, rememberFileCheckBox.selected);
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function cancelButton_click(event:MouseEvent):void {
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	<s:Button id="cancelButton" right="16" bottom="16" label="Cancel" click="cancelButton_click(event)" />
+	<s:Button id="okButton" right="94" bottom="16" label="Ok" click="okButton_click(event)" />
+	<s:CheckBox id="rememberWindowStateCheckBox" y="25" left="38" label="Remember window state" />
+	<s:CheckBox id="rememberFileCheckBox" y="51" left="38" label="Remember last opened file" />
+	<s:CheckBox id="checkForUpdatesCheckBox" y="76" left="38" label="Check for updates on start" />
+</s:TitleWindow>

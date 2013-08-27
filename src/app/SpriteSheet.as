@@ -44,8 +44,7 @@ package app {
 		public function draw(data:BitmapData, delta:int, containerBounds:Rectangle):void {
 			if (!_data)
 				return;
-			_frameWidth = _data.width / _model.cols;
-			_frameHeight = _data.height / _model.rows;
+			updateFrameSize();
 			_drawPosition.x = (containerBounds.right - _frameWidth) * 0.5;
 			_drawPosition.y = (containerBounds.bottom - _frameHeight) * 0.5;
 			_frameIndex = getNextFrameIndex(delta);
@@ -57,11 +56,14 @@ package app {
 				drawPosition, null, null, false);
 		}
 		
+		public function updateFrameSize():void {
+			_frameWidth = _data.width / _model.cols;
+			_frameHeight = _data.height / _model.rows;
+		}
+		
 		public function getFrameAt(index:int, data:BitmapData, drawPosition:Point):void {
 			if (!_data)
 				return;
-			var _frameWidth:Number = _data.width / _model.cols;
-			var _frameHeight:Number = _data.height / _model.rows;
 			var row:int = index / _model.cols;
 			var col:int = index % _model.cols;
 			data.copyPixels(_data,

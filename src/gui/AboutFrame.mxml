@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" width="344" height="215" backgroundColor="#666666" horizontalCenter="-4" styleName="Tools" verticalCenter="0">
+
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			[Bindable]
+			public var version:String;
+			
+			public static function show(caller:DisplayObject, version:String):void {
+				var popup:AboutFrame = PopUpManager.createPopUp(caller, AboutFrame, true) as AboutFrame;
+				popup.version = version;
+				PopUpManager.centerPopUp(popup);
+			}
+			
+			private function onClick(event:MouseEvent):void {
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</fx:Script>
+
+	<s:Label y="15" color="#F3F3F3" fontFamily="Arial" fontSize="20" fontStyle="italic" fontWeight="bold" horizontalCenter="7" text="SpriteSheet Preview" />
+	<mx:HRule y="39" width="264" height="4" horizontalCenter="18" />
+	<s:Label y="55" width="300" color="#F3F3F3" horizontalCenter="0" text="A simple program to preview sprite sheets.&#xd;Just drag your spritesheet on it and set rows and cols. Hit play e see the preview." textAlign="center" />
+	<s:Label bottom="63" color="#F3F3F3" horizontalCenter="0" text="Kleber Lopes da Silva" />
+	<mx:LinkButton bottom="42" label="http://kleber-swf.blogspot.com" click="navigateToURL(new URLRequest('http://kleber-swf.blogspot.com'))" color="#9AAEC4" horizontalCenter="0" />
+	<s:Image x="11" y="12" source="assets/icons/icon-36.png" />
+	<s:Label id="versionLabel" y="109" width="165" color="#F3F3F3" horizontalCenter="0" text="Version {version}" textAlign="center" />
+	<s:Button id="closeButton" bottom="10" label="Close" click="onClick(event)" horizontalCenter="0"/>
+</s:BorderContainer>

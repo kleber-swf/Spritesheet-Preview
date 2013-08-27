@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>AIR Application Installer</title>
+	<script type="text/javascript" src="swfobject.js"></script>
+</head>
+<body color="#FFFFFF">
+	<div id="flashcontent" style="width:215px; height:180px;">
+		<strong>Please upgrade your Flash Player</strong>
+		This is the content that would be shown if the user does not have Flash Player 6.0.65 or higher installed.
+	</div>
+
+	<script type="text/javascript">
+		var so = new SWFObject("AIRInstallBadge.swf", "Badge", "215", "180", "9.0.115", "#FFFFFF");
+		so.useExpressInstall('expressinstall.swf');
+		so.addVariable("airversion", "3.1");
+		so.addVariable("appname", "SpriteSheet Preview");
+		so.addVariable("appurl", "http://tools.kleber-swf.com/spritesheetpreview/SpriteSheetPreview.air");
+		so.addVariable("appid", "com.flipflopgames.SpriteSheetPreview");
+		so.addVariable("pubid", "FlipFlop Games");
+		so.addVariable("appversion", "1.3.0");
+		so.addVariable("image", "preview.png");
+		so.addVariable("appinstallarg", "installed from web");
+		so.addVariable("applauncharg", "launched from web");
+		so.addVariable("helpurl", "help.html");
+		so.addVariable("hidehelp", "true");
+		so.addVariable("skiptransition", "false");
+		so.addVariable("titlecolor", "#00AAFF");
+		so.addVariable("buttonlabelcolor", "#00AAFF");
+		so.addVariable("appnamecolor", "#00AAFF");
+		so.addVariable("str_err_airswf", "<u>Running locally?</u><br/><br/>The AIR proxy swf won't load properly when this demo is run from the local file system.");
+		so.write("flashcontent");
+	</script>
+</body>
+</html>
