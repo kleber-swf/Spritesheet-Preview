@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <update xmlns="http://ns.adobe.com/air/framework/update/description/1.0">
-<versionNumber>1.3.0</versionNumber>
-<url>http://kleber.flipflopgames.com/projects/tools/spritesheetpreview/SpriteSheetPreview.air</url>
-<description><![CDATA[1.3.0
+<versionNumber>1.3.1</versionNumber>
+<url>http://tools.kleber-swf.com/spritesheetpreview/SpriteSheetPreview.air</url>
+<description><![CDATA[1.3.1
+	* added "close" button
+	* added "reset start frame" and "reset end frame" buttons
+
+1.3.0
 	* new frame preview panel, it's more easy to find a specific frame
 	* new "show frame border" option
 	* window state saved when the program closes

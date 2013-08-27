@@ -27,6 +27,11 @@ package app {
 		}
 		
 		public function set imageURL(value:String):void {
+			if (!value) {
+				_imageURL = "";
+				onImageLoadSuccess(null);
+				return;
+			}
 			if (!isValidFileURL(value)) {
 				if (onImageLoadError != null)
 					onImageLoadError("Invalid image file");

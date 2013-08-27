@@ -20,6 +20,14 @@ package app {
 		}
 		
 		public function set image(image:Bitmap):void {
+			if (!image) {
+				if (_data != null)
+					_data.dispose();
+				_data = null;
+				_frameWidth = 0;
+				_frameHeight = 0;
+				return;
+			}
 			_data = image.bitmapData;
 			_frameWidth = _data.width / _model.cols;
 			_frameHeight = _data.height / _model.rows;
