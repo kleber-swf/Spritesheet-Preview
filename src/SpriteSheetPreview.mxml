@@ -482,8 +482,8 @@
 		<s:CheckBox id="frameBorderCheckBox" left="194" label="Show frame border" click="frameBorderCheckBox_click(event)" selected="{_showFrameBorder}" verticalCenter="0" />
 	</s:BorderContainer>
 	<s:BorderContainer y="10" right="10" width="69" height="31" styleName="Tools">
-		<s:Image id="aboutButton" right="7" width="26" height="26" click="AboutFrame.show(this, _updater.version)" source="@Embed('../assets/images/icons/question.png')" verticalCenter="0" />
-		<s:Image id="settingsButton" left="6" width="26" height="26" click="SettingsFrame.show(this)" source="@Embed('../assets/images/icons/settings.png')" verticalCenter="0" />
+		<s:Image id="aboutButton" right="7" width="26" height="26" click="AboutFrame.show(this, _updater.version)" smooth="true" source="@Embed('../assets/images/icons/question.png')" verticalCenter="0" />
+		<s:Image id="settingsButton" left="6" width="26" height="26" click="SettingsFrame.show(this)" smooth="true" source="@Embed('../assets/images/icons/settings.png')" verticalCenter="0" />
 	</s:BorderContainer>
 	<s:BorderContainer left="10" top="10" bottom="10" width="142" styleName="Tools">
 		<s:Panel left="0" right="0" top="124" height="124" backgroundColor="#444444" dropShadowVisible="false" enabled="{_hasContent}" styleName="Tools" title="Info">
@@ -501,8 +501,8 @@
 							  textAlign="right" value="{_model.startFrame+1}" verticalCenter="-18" />
 			<s:NumericStepper id="endFrameInput" right="10" width="61" borderColor="#333333" borderVisible="true" change="endFrameInput_change(event)" maximum="{_model.totalFrames}"
 							  minimum="{_model.startFrame+1}" textAlign="right" value="{_model.endFrame+1}" verticalCenter="10" />
-			<s:Image id="resetStartButton" x="47" width="16" height="16" source="@Embed('../assets/images/icons/reset.png')" toolTip="Reset" verticalCenter="-18" click="resetStartButton_click(event)" />
-			<s:Image id="resetEndButton" x="47" width="16" height="16" source="@Embed('../assets/images/icons/reset.png')" toolTip="Reset" verticalCenter="10" click="resetEndButton_click(event)" />
+			<s:Image id="resetStartButton" x="47" width="16" height="16" click="resetStartButton_click(event)" smooth="true" source="@Embed('../assets/images/icons/reset.png')" toolTip="Reset" verticalCenter="-18" />
+			<s:Image id="resetEndButton" x="47" width="16" height="16" click="resetEndButton_click(event)" smooth="true" source="@Embed('../assets/images/icons/reset.png')" toolTip="Reset" verticalCenter="10" />
 		</s:Panel>
 		<s:Panel y="0" left="0" right="0" height="125" dropShadowVisible="false" styleName="Tools" title="File">
 			<s:Button id="openButton" y="20" label="Open" click="openButton_click(event)" horizontalCenter="0" />
