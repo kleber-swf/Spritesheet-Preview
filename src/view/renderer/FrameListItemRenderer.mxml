@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
-				xmlns:s="library://ns.adobe.com/flex/spark" 
-				xmlns:mx="library://ns.adobe.com/flex/mx" 
-				autoDrawBackground="true">
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" autoDrawBackground="true">
 	<fx:Script>
 		<![CDATA[
 			import app.SpriteSheet;
@@ -13,48 +10,47 @@
 				super.data = value;
 				
 				var _spriteSheet:SpriteSheet = SpriteSheetPreview._spriteSheet;
-				var _bitmapData:BitmapData;
+				var _bitmapData:BitmapData = new BitmapData(160, 100, true, 0x000000);
 				if (_spriteSheet.hasData) {
 					_spriteSheet.updateFrameSize();
 					var bufferWidth:int = _spriteSheet.width;
 					var bufferHeight:int = _spriteSheet.height;
 					var scale:Number;
 					if (bufferWidth > bufferHeight) {
-						scale = 160/bufferWidth;
-//						_drawPosition.x = 0;
-//						_drawPosition.y = ((100 / scale) - bufferHeight)*0.5;
+						scale = 160 / bufferWidth;
+							//						_drawPosition.x = 0;
+							//						_drawPosition.y = ((100 / scale) - bufferHeight)*0.5;
 					} else {
-						scale = 100/bufferHeight;
-//						_drawPosition.x = ((160 / scale) - bufferWidth)*0.5;
-//						_drawPosition.y = 0;
+						scale = 100 / bufferHeight;
+							//						_drawPosition.x = ((160 / scale) - bufferWidth)*0.5;
+							//						_drawPosition.y = 0;
 					}
 					
 					var _matrix:Matrix = new Matrix();
 					_matrix.scale(scale, scale);
-//					_matrix.translate((bufferWidth*scale-160)*0.5, (bufferHeight*scale-100)*0.5);
+					//					_matrix.translate((bufferWidth*scale-160)*0.5, (bufferHeight*scale-100)*0.5);
 					
-//					_drawPosition.x = (160/scale - bufferWidth) * 0.5;
-//					_drawPosition.y = (100/scale - bufferHeight) * 0.5;
+					//					_drawPosition.x = (160/scale - bufferWidth) * 0.5;
+					//					_drawPosition.y = (100/scale - bufferHeight) * 0.5;
 					
-//					_drawPosition.x = (bufferWidth-160) * 0.5;
-//					_drawPosition.y = (bufferHeight-100) * 0.5;
+					//					_drawPosition.x = (bufferWidth-160) * 0.5;
+					//					_drawPosition.y = (bufferHeight-100) * 0.5;
 					
 					var _buffer:BitmapData = new BitmapData(bufferWidth, bufferHeight, true, 0x000000);
 					_buffer.lock();
 					_spriteSheet.getFrameAt(int(data), _buffer, _drawPosition);
 					_buffer.unlock();
 					
-					_bitmapData = new BitmapData(160, 100, true, 0x000000);
+					_bitmapData.fillRect(_bitmapData.rect, 0x000000);
 					_bitmapData.lock();
 					_bitmapData.draw(_buffer, _matrix);
 					_bitmapData.unlock();
-				} else {
-					_bitmapData = new BitmapData(160, 100, true, 0x000000);
-				}
+				} else
+					_bitmapData.fillRect(_bitmapData.rect, 0x000000);
 				image.source = _bitmapData;
-			}			
+			}
 		]]>
 	</fx:Script>
-	<s:BitmapImage id="image" width="{160}" height="{100}"/>
-	
+	<s:BitmapImage id="image" width="{160}" height="{100}" horizontalCenter="0" verticalCenter="0" />
+
 </s:ItemRenderer>
