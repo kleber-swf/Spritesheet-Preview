@@ -36,6 +36,8 @@ package  {
 	import adobe.utils.ProductManager;
 	import flash.system.Capabilities;
 	import flash.external.ExternalInterface;
+	import com.google.analytics.AnalyticsTracker;
+	import com.google.analytics.GATracker;
 	
 	public class AIRInstallBadge extends MovieClip {
 		
@@ -68,6 +70,8 @@ package  {
 		protected var image:String;
 		protected var pubID:String;
 		protected var skipTransition:Boolean;
+		protected var trackName:String;
+		protected var tracker:AnalyticsTracker;
 		//
 		protected var installedAIRVersion:String;
 		protected var airSWFLoader:Loader;
@@ -76,6 +80,7 @@ package  {
 		protected var prevAction:String;
 		protected var timer:Timer;
 		protected var productManager:ProductManager;
+		
 	
 	// Initialization:
 		public function AIRInstallBadge() {
@@ -105,6 +110,8 @@ package  {
 			dialog.titleFld.textColor = (params.titlecolor != null) ? parseInt(params.titlecolor.replace(/[^0-9A-F]*/ig,""),16) : 0xff0000;
 			actionFld.textColor = (params.buttonlabelcolor != null) ? parseInt(params.buttonlabelcolor.replace(/[^0-9A-F]*/ig,""),16) : 0xffffff;
 			imageAltFld.textColor = (params.appnamecolor != null) ? parseInt(params.appnamecolor.replace(/[^0-9A-F]*/ig,""),16) : 0xffffff;
+			trackName = params.trackName; // google analytics param
+			//trackID = params.trackID;
 			
 			// verify all required params are accounted for:
 			if (!verifyParams()) {
@@ -136,6 +143,11 @@ package  {
 			} catch (e:*) {
 				handleAIRSWFError(null);
 			}
+			
+			// google analytics tracking
+			if (!trackName)
+				return;
+			tracker = new GATracker(this, "UA-28006448-4", "AS3");
 		}
 	
 	// Public Methods:
@@ -452,7 +464,7 @@ package  {
 		}
 		
 		private function gaTracking(action:String):void {
-			ExternalInterface.call("pageTracker._trackPageview", "/airbadge/" + action);
+			tracker.trackEvent(trackName, "Install", action);
 		}
 	}
 }

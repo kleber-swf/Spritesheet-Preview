@@ -1,4 +1,4 @@
-﻿================================================================================
+================================================================================
 Adobe AIR Badge Installer Sample Getting Started Guide V2 (8/06/2008)
 ================================================================================
 
@@ -187,6 +187,12 @@ This will allow any version of Flash Player 6.0.65 or greater to painlessly inst
 
 Please see additional resources below for more information on customizing SWFObject.
 
+--------------------------------------------------------------------------------
+You can skin anything in this FLA directly. Just be sure to preserve instance names on fields, movieclips, and buttons.
+
+The timeline will be stopped when the SWF first opens, and will play when the image loads into the image movieclip.
+
+The badge must be at least 215 x 138 to work with express install.
 
 
 ================================================================================
